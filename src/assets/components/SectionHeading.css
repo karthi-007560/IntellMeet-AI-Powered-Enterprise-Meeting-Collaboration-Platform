@@ -1,0 +1,48 @@
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.section-heading-copy {
+  min-width: 0;
+}
+
+.section-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: #6b5ce7;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.section-heading h1 {
+  color: #182230;
+  font-size: clamp(25px, 3vw, 31px);
+  font-weight: 750;
+  letter-spacing: -1px;
+}
+
+.section-heading p {
+  margin-top: 9px;
+  color: #858fa1;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.section-heading-action {
+  flex-shrink: 0;
+}
+
+@media (max-width: 560px) {
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 15px;
+  }
+}

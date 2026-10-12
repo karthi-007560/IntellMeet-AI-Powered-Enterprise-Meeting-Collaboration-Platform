@@ -1,0 +1,79 @@
+
+* {
+  box-sizing: border-box;
+}
+
+.intellmeet {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  text-align: center;
+  font-family: Inter, Arial, sans-serif;
+  color: #f8fafc;
+  background:
+    radial-gradient(circle at top left, #312e81, transparent 45%),
+    linear-gradient(135deg, #0f172a, #111827 65%, #1e1b4b);
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 24px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 12px 40px #6366f155;
+}
+
+.intellmeet h1 {
+  margin: 0;
+  font-size: clamp(38px, 7vw, 64px);
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+.intellmeet p {
+  margin: 16px 0 28px;
+  color: #cbd5e1;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.intellmeet button {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  background: #6366f1;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.intellmeet button:hover {
+  transform: translateY(-3px);
+  background: #818cf8;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 32px;
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 12px #4ade8080;
+}

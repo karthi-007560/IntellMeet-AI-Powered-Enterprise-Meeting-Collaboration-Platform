@@ -1,0 +1,175 @@
+
+.meeting-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #eaedf3;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgb(16 24 40 / 3%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.meeting-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgb(16 24 40 / 6%);
+}
+
+.meeting-card-header,
+.meeting-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.meeting-category-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.meeting-category-icon.purple {
+  color: #6859e8;
+  background: #f0eeff;
+}
+
+.meeting-category-icon.blue {
+  color: #2586e8;
+  background: #eaf5ff;
+}
+
+.meeting-category-icon.green {
+  color: #159a70;
+  background: #e8f8f0;
+}
+
+.meeting-category-icon.orange {
+  color: #e58b32;
+  background: #fff3e5;
+}
+
+.meeting-status {
+  padding: 6px 9px;
+  border-radius: 20px;
+  background: #f0eeff;
+  color: #6859e8;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.meeting-status.in-progress {
+  background: #e8f8f0;
+  color: #159a70;
+}
+
+.meeting-status.completed {
+  background: #f2f4f7;
+  color: #667085;
+}
+
+.meeting-card-body {
+  padding: 22px 0;
+}
+
+.meeting-category {
+  color: #8b7cf6;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.meeting-card-body h3 {
+  margin: 9px 0 17px;
+  color: #182230;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.meeting-detail {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 11px;
+  color: #7d8798;
+  font-size: 11px;
+}
+
+.meeting-detail span {
+  color: #8b7cf6;
+  font-size: 15px;
+}
+
+.meeting-card-footer {
+  padding-top: 16px;
+  border-top: 1px solid #f0f2f6;
+}
+
+.participant-stack {
+  display: flex;
+  align-items: center;
+  padding-left: 2px;
+}
+
+.participant-avatar,
+.participant-extra {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -3px;
+  border: 2px solid white;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.participant-0 {
+  background: #e4ddff;
+  color: #604bd6;
+}
+
+.participant-1 {
+  background: #d9f2e6;
+  color: #167950;
+}
+
+.participant-2 {
+  background: #ffe8d2;
+  color: #a65d19;
+}
+
+.participant-3 {
+  background: #dceeff;
+  color: #2468a9;
+}
+
+.participant-extra {
+  background: #f2f4f7;
+  color: #667085;
+}
+
+.meeting-join-button {
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #6255e7;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  transition: background 0.2s;
+}
+
+.meeting-join-button:hover:not(:disabled) {
+  background: #4e42cb;
+}
+
+.meeting-join-button:disabled {
+  background: #e4e7ec;
+  color: #667085;
+  cursor: not-allowed;
+}
