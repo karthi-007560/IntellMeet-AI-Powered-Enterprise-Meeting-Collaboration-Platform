@@ -1,5 +1,5 @@
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Circle,
@@ -16,90 +16,79 @@ import "./TasksPage.css";
 type TaskFilter = "All" | "Pending" | "Completed";
 type Priority = "High" | "Medium" | "Low";
 
-const initialTasks: Task[] = [
-  {
-    id: "task-1",
-    title: "Prepare project sprint plan",
-    project: "IntellMeet",
-    dueDate: "2026-10-14",
-    priority: "High",
-    completed: false,
-  },
-  {
-    id: "task-2",
-    title: "Review meeting notes",
-    project: "Team Collaboration",
-    dueDate: "2026-10-15",
-    priority: "Medium",
-    completed: false,
-  },
-  {
-    id: "task-3",
-    title: "Update UI component library",
-    project: "Frontend Development",
-    dueDate: "2026-10-17",
-    priority: "High",
-    completed: true,
-  },
-  {
-    id: "task-4",
-    title: "Share weekly progress",
-    project: "Team Collaboration",
-    dueDate: "2026-10-18",
-    priority: "Low",
-    completed: false,
-  },
-  {
-    id: "task-5",
-    title: "Test responsive layouts",
-    project: "IntellMeet",
-    dueDate: "2026-10-19",
-    priority: "Medium",
-    completed: false,
-  },
-];
+const STORAGE_KEY = "intellmeet_tasks";
+
+function loadTasks(): Task[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return [];
+
+    const parsed: unknown = JSON.parse(saved);
+    return Array.isArray(parsed) ? (parsed as Task[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveTasks(tasks: Task[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  window.dispatchEvent(new Event("intellmeet_tasks_updated"));
+}
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>(loadTasks);
   const [filter, setFilter] = useState<TaskFilter>("All");
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
 
   const [title, setTitle] = useState("");
-  const [project, setProject] = useState("IntellMeet");
+  const [project, setProject] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState<Priority>("Medium");
 
-  const completedCount = tasks.filter((task) => task.completed).length;
+  useEffect(() => {
+    const refreshTasks = () => setTasks(loadTasks());
+
+    window.addEventListener("storage", refreshTasks);
+
+    return () => {
+      window.removeEventListener("storage", refreshTasks);
+    };
+  }, []);
+
+  const completedCount = tasks.filter(
+    (task) => task.completed
+  ).length;
+
   const pendingCount = tasks.length - completedCount;
+
   const progress =
-    tasks.length === 0 ? 0 : Math.round((completedCount / tasks.length) * 100);
+    tasks.length === 0
+      ? 0
+      : Math.round((completedCount / tasks.length) * 100);
 
   const visibleTasks = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
     return tasks.filter((task) => {
       const matchesFilter =
         filter === "All" ||
         (filter === "Completed" && task.completed) ||
         (filter === "Pending" && !task.completed);
 
-      const query = search.trim().toLowerCase();
-      const matchesSearch =
-        task.title.toLowerCase().includes(query) ||
-        task.project.toLowerCase().includes(query);
+      const matchesSearch = [
+        task.title,
+        task.project,
+        task.dueDate,
+        task.priority,
+        task.completed ? "completed" : "pending",
+      ].some((value) =>
+        String(value ?? "").toLowerCase().includes(query)
+      );
 
       return matchesFilter && matchesSearch;
     });
   }, [tasks, filter, search]);
-
-  function toggleTask(taskId: string) {
-    setTasks((current) =>
-      current.map((task) =>
-        task.id === taskId
-          ? { ...task, completed: !task.completed }
-          : task
-      )
-    );
-  }
 
   function addTask(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -113,9 +102,13 @@ export default function TasksPage() {
       completed: false,
     };
 
-    setTasks((current) => [newTask, ...current]);
+    const updatedTasks = [newTask, ...tasks];
+
+    saveTasks(updatedTasks);
+    setTasks(updatedTasks);
+
     setTitle("");
-    setProject("IntellMeet");
+    setProject("");
     setDueDate("");
     setPriority("Medium");
     setFilter("All");
@@ -123,16 +116,43 @@ export default function TasksPage() {
     setShowForm(false);
   }
 
-  function deleteTask(taskId: string) {
-    setTasks((current) => current.filter((task) => task.id !== taskId));
+  function toggleTask(taskId: string) {
+    const updatedTasks = tasks.map((task) =>
+      task.id === taskId
+        ? { ...task, completed: !task.completed }
+        : task
+    );
+
+    saveTasks(updatedTasks);
+    setTasks(updatedTasks);
   }
+
+  function deleteTask(taskId: string) {
+    if (!window.confirm("Are you sure you want to delete this task?")) {
+      return;
+    }
+
+    const updatedTasks = tasks.filter(
+      (task) => task.id !== taskId
+    );
+
+    saveTasks(updatedTasks);
+    setTasks(updatedTasks);
+  }
+
+  const today = new Date();
+  const minDate = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
 
   return (
     <section className="tasks-page">
       <SectionHeading
         eyebrow="WORK MANAGEMENT"
         title="My Tasks"
-        subtitle="Organize your work, track priorities, and get things done."
+        subtitle="Create and manage your own tasks."
         action={
           <button
             className="tasks-primary-btn"
@@ -146,27 +166,21 @@ export default function TasksPage() {
 
       <div className="tasks-stats">
         <article className="tasks-stat-card">
-          <div className="tasks-stat-icon purple">
-            <ClipboardList size={21} />
-          </div>
+          
           <span>Total tasks</span>
           <strong>{tasks.length}</strong>
-          <small>Tasks in your workspace</small>
+          <small>Your saved tasks</small>
         </article>
 
         <article className="tasks-stat-card">
-          <div className="tasks-stat-icon orange">
-            <Circle size={21} />
-          </div>
+          
           <span>Pending</span>
           <strong>{pendingCount}</strong>
           <small>Waiting to be completed</small>
         </article>
 
         <article className="tasks-stat-card">
-          <div className="tasks-stat-icon green">
-            <CheckCircle2 size={21} />
-          </div>
+          
           <span>Completed</span>
           <strong>{completedCount}</strong>
           <small>Tasks finished</small>
@@ -185,7 +199,7 @@ export default function TasksPage() {
           >
             <div style={{ width: `${progress}%` }} />
           </div>
-          <small>Overall task progress</small>
+          <small>Your overall task progress</small>
         </article>
       </div>
 
@@ -194,29 +208,31 @@ export default function TasksPage() {
           <Search size={18} />
           <input
             type="search"
-            placeholder="Search tasks or projects..."
+            placeholder="Search your tasks or projects..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
         </div>
 
         <div className="tasks-filter-tabs">
-          {(["All", "Pending", "Completed"] as TaskFilter[]).map((item) => (
-            <button
-              key={item}
-              className={filter === item ? "active" : ""}
-              onClick={() => setFilter(item)}
-            >
-              {item}
-              <span>
-                {item === "All"
-                  ? tasks.length
-                  : item === "Pending"
-                    ? pendingCount
-                    : completedCount}
-              </span>
-            </button>
-          ))}
+          {(["All", "Pending", "Completed"] as TaskFilter[]).map(
+            (item) => (
+              <button
+                key={item}
+                className={filter === item ? "active" : ""}
+                onClick={() => setFilter(item)}
+              >
+                {item}
+                <span>
+                  {item === "All"
+                    ? tasks.length
+                    : item === "Pending"
+                      ? pendingCount
+                      : completedCount}
+                </span>
+              </button>
+            )
+          )}
         </div>
       </div>
 
@@ -224,7 +240,7 @@ export default function TasksPage() {
         <div className="tasks-list-heading">
           <div>
             <h2>Task list</h2>
-            <p>Your work, organized in one place.</p>
+            <p>Your manually created tasks appear here.</p>
           </div>
           <span className="tasks-result-count">
             {visibleTasks.length} tasks
@@ -233,9 +249,16 @@ export default function TasksPage() {
 
         {visibleTasks.length === 0 ? (
           <div className="tasks-empty">
-            <ClipboardList size={35} />
-            <h3>No tasks found</h3>
-            <p>Try another search or add a new task.</p>
+            <h3>
+              {search || filter !== "All"
+                ? "No matching tasks"
+                : "No tasks yet"}
+            </h3>
+            <p>
+              {search || filter !== "All"
+                ? "Try changing your search or filter."
+                : "Add your first task to get started."}
+            </p>
             <button
               className="tasks-primary-btn"
               onClick={() => setShowForm(true)}
@@ -262,10 +285,14 @@ export default function TasksPage() {
                   <tr key={task.id}>
                     <td>
                       <button
-                        className={`task-check ${task.completed ? "checked" : ""}`}
+                        className={`task-check ${
+                          task.completed ? "checked" : ""
+                        }`}
                         onClick={() => toggleTask(task.id)}
                         aria-label={
-                          task.completed ? "Mark pending" : "Mark completed"
+                          task.completed
+                            ? "Mark pending"
+                            : "Mark completed"
                         }
                       >
                         {task.completed ? (
@@ -275,41 +302,55 @@ export default function TasksPage() {
                         )}
                       </button>
                       <span
-                        className={`task-title ${task.completed ? "done" : ""}`}
+                        className={`task-title ${
+                          task.completed ? "done" : ""
+                        }`}
                       >
                         {task.title}
                       </span>
                     </td>
+
                     <td>
-                      <span className="task-project">{task.project}</span>
+                      <span className="task-project">
+                        {task.project || "—"}
+                      </span>
                     </td>
+
                     <td>
                       <span className="task-date">
                         {task.dueDate
-                          ? new Date(`${task.dueDate}T12:00:00`).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              }
-                            )
+                          ? new Date(
+                              `${task.dueDate}T12:00:00`
+                            ).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })
                           : "No date"}
                       </span>
                     </td>
-                    <td>
-                      <span className={`task-priority ${task.priority.toLowerCase()}`}>
-                        <span />
-                        {task.priority}
-                      </span>
-                    </td>
+
                     <td>
                       <span
-                        className={`task-status ${task.completed ? "complete" : "pending"}`}
+                        className={`task-priority ${
+                          (task.priority || "Medium").toLowerCase()
+                        }`}
+                      >
+                        <span />
+                        {task.priority || "Medium"}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                        className={`task-status ${
+                          task.completed ? "complete" : "pending"
+                        }`}
                       >
                         {task.completed ? "Completed" : "Pending"}
                       </span>
                     </td>
+
                     <td>
                       <button
                         className="task-delete-btn"
@@ -336,6 +377,7 @@ export default function TasksPage() {
                 <span>WORK MANAGEMENT</span>
                 <h2>Create a task</h2>
               </div>
+
               <button
                 type="button"
                 className="tasks-close-btn"
@@ -370,6 +412,7 @@ export default function TasksPage() {
             <input
               id="task-due-date"
               type="date"
+              min={minDate}
               value={dueDate}
               onChange={(event) => setDueDate(event.target.value)}
               required
@@ -392,8 +435,9 @@ export default function TasksPage() {
               <Plus size={18} />
               Create Task
             </button>
+
             <p className="tasks-demo-note">
-              Demo mode: tasks are held in page memory and are not saved to a database.
+              Tasks are saved in this browser.
             </p>
           </form>
         </div>

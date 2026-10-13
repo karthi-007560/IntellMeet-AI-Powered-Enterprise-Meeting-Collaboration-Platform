@@ -109,3 +109,102 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --app-bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-hover: #eef2ff;
+  --text-primary: #172033;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: #e2e8f0;
+  --input-bg: #ffffff;
+  --primary-color: #635bff;
+  --primary-hover: #5046e5;
+  --primary-soft: #eeecff;
+  --sidebar-bg: #ffffff;
+  --header-bg: #ffffff;
+  --card-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #0b1120;
+  --surface: #151e30;
+  --surface-secondary: #1b263a;
+  --surface-hover: #25334c;
+  --text-primary: #f1f5f9;
+  --text-secondary: #bdc8da;
+  --text-muted: #94a3b8;
+  --border-color: #2b3950;
+  --input-bg: #111a2b;
+  --primary-color: #a69cff;
+  --primary-hover: #b8b0ff;
+  --primary-soft: #302b52;
+  --sidebar-bg: #101827;
+  --header-bg: #101827;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.16);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body,
+#root {
+  background: var(--app-bg);
+  color: var(--text-primary);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.settings-page,
+.settings-card,
+.settings-side-card,
+.settings-profile-banner {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.settings-card,
+.settings-side-card,
+.settings-profile-banner {
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+}
+
+.settings-page h1,
+.settings-page h2,
+.settings-page h3,
+.settings-page strong,
+.settings-page label {
+  color: var(--text-primary);
+}
+
+.settings-page p,
+.settings-page .settings-field span,
+.settings-page .settings-toggle-row span {
+  color: var(--text-secondary);
+}
+
+.settings-page input,
+.settings-page select,
+.settings-page textarea {
+  background: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.settings-page input::placeholder {
+  color: var(--text-muted);
+}
+
+.settings-page .settings-helper {
+  color: var(--text-secondary);
+}

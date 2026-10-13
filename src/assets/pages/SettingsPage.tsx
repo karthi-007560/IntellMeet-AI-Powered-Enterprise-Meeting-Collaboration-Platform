@@ -1,407 +1,353 @@
 
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-  UserRound,
-  Bell,
-  SlidersHorizontal,
-  Video,
   Save,
-  CheckCircle2,
-  Monitor,
+  Sun,
+  Moon,
+  LayoutDashboard,
+  Sparkles,
+  Check,
 } from "lucide-react";
-import SectionHeading from "../components/SectionHeading";
 import "./SettingsPage.css";
 
-type Settings = {
-  name: string;
-  email: string;
-  role: string;
-  theme: string;
-  language: string;
-  timezone: string;
-  emailNotifications: boolean;
-  meetingReminders: boolean;
-  taskNotifications: boolean;
-  cameraEnabled: boolean;
-  microphoneEnabled: boolean;
+type Theme = "indigo" | "blue" | "green" | "purple" | "orange" | "rose";
+type Mode = "light" | "dark";
+type Style = "modern" | "glass" | "minimal";
+
+interface Appearance {
+  theme: Theme;
+  mode: Mode;
+  style: Style;
+}
+
+const STORAGE_KEY = "intellmeet_appearance";
+
+const DEFAULT_APPEARANCE: Appearance = {
+  theme: "indigo",
+  mode: "light",
+  style: "modern",
 };
 
-const defaultSettings: Settings = {
-  name: "Karthik",
-  email: "karthik@example.com",
-  role: "Frontend Developer",
-  theme: "Light",
-  language: "English",
-  timezone: "Asia/Kolkata",
-  emailNotifications: true,
-  meetingReminders: true,
-  taskNotifications: false,
-  cameraEnabled: true,
-  microphoneEnabled: true,
+const COLORS: { id: Theme; name: string; color: string }[] = [
+  { id: "indigo", name: "Indigo", color: "#6366f1" },
+  { id: "blue", name: "Blue", color: "#2563eb" },
+  { id: "green", name: "Green", color: "#059669" },
+  { id: "purple", name: "Purple", color: "#8b5cf6" },
+  { id: "orange", name: "Orange", color: "#f97316" },
+  { id: "rose", name: "Rose", color: "#e11d48" },
+];
+
+const STYLES: { id: Style; name: string; description: string }[] = [
+  { id: "modern", name: "Modern", description: "Clean cards and soft shadows" },
+  { id: "glass", name: "Glass", description: "Transparent surfaces and blur" },
+  { id: "minimal", name: "Minimal", description: "Simple and clean layout" },
+];
+
+const ACCENT_COLORS: Record<Theme, string> = {
+  indigo: "#6366f1",
+  blue: "#2563eb",
+  green: "#059669",
+  purple: "#8b5cf6",
+  orange: "#f97316",
+  rose: "#e11d48",
 };
 
-const storageKey = "intellmeet_settings";
-
-function readSettings(): Settings {
+function readAppearance(): Appearance {
   try {
-    const saved = localStorage.getItem(storageKey);
-    return saved
-      ? { ...defaultSettings, ...JSON.parse(saved) }
-      : defaultSettings;
-  } catch {
-    return defaultSettings;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      return {
+        theme: ACCENT_COLORS[parsed.theme as Theme]
+          ? parsed.theme
+          : DEFAULT_APPEARANCE.theme,
+        mode: parsed.mode === "dark" ? "dark" : "light",
+        style: ["modern", "glass", "minimal"].includes(parsed.style)
+          ? parsed.style
+          : DEFAULT_APPEARANCE.style,
+      };
+    }
+  } catch (error) {
+    console.error("Could not read appearance settings:", error);
   }
+
+  return { ...DEFAULT_APPEARANCE };
+}
+
+function applyAppearance(appearance: Appearance) {
+  const root = document.documentElement;
+
+  root.dataset.theme = appearance.mode;
+  root.dataset.mode = appearance.mode;
+  root.dataset.accent = appearance.theme;
+  root.dataset.style = appearance.style;
+  root.style.colorScheme = appearance.mode;
+
+  root.style.setProperty(
+    "--primary-color",
+    ACCENT_COLORS[appearance.theme]
+  );
+
+  root.style.setProperty(
+    "--primary-hover",
+    ACCENT_COLORS[appearance.theme]
+  );
+
+  window.dispatchEvent(
+    new CustomEvent("intellmeet_appearance_updated", {
+      detail: appearance,
+    })
+  );
 }
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>(readSettings);
+  // The saved settings are the initial values.
+  const [appearance, setAppearance] =
+    useState<Appearance>(() => readAppearance());
+
+  // Unsaved selections stay separate from the currently applied theme.
+  const [draft, setDraft] = useState<Appearance>(() => readAppearance());
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    if (!saved) return;
-    const timer = window.setTimeout(() => setSaved(false), 2500);
-    return () => window.clearTimeout(timer);
-  }, [saved]);
+  const { theme, mode, style } = draft;
 
-  function update<K extends keyof Settings>(
+  const updateAppearance = <K extends keyof Appearance>(
     key: K,
-    value: Settings[K]
-  ) {
-    setSettings((current) => ({ ...current, [key]: value }));
+    value: Appearance[K]
+  ) => {
+    setDraft((previous) => ({
+      ...previous,
+      [key]: value,
+    }));
+
     setSaved(false);
-  }
+  };
 
-  function saveSettings() {
+  const handleSave = () => {
     try {
-      localStorage.setItem(storageKey, JSON.stringify(settings));
-      setSaved(true);
-    } catch {
-      window.alert("Settings could not be saved in this browser.");
-    }
-  }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
 
-  function resetSettings() {
-    setSettings(defaultSettings);
-    try {
-      localStorage.removeItem(storageKey);
+      // Apply the entire app theme only after Save is clicked.
+      applyAppearance(draft);
+      setAppearance({ ...draft });
       setSaved(true);
-    } catch {
-      setSaved(false);
+
+      window.dispatchEvent(
+        new CustomEvent("intellmeet_settings_updated", {
+          detail: draft,
+        })
+      );
+    } catch (error) {
+      console.error("Could not save appearance settings:", error);
+      alert("Settings save panna mudiyala. Please try again.");
     }
-  }
+  };
+
+  const selectedColor =
+    COLORS.find((item) => item.id === theme) ?? COLORS[0];
+
+  const selectedStyle =
+    STYLES.find((item) => item.id === style) ?? STYLES[0];
 
   return (
-    <section className="settings-page">
-      <SectionHeading
-        eyebrow="PERSONALIZE YOUR EXPERIENCE"
-        title="Settings"
-        subtitle="Manage your profile, notifications and meeting preferences."
-      />
-
-      <div className="settings-profile-banner">
-        <div className="settings-avatar">
-          {settings.name.trim().charAt(0).toUpperCase() || "U"}
+    <div className="page settingsPage">
+      <header className="settingsPageHeader">
+        <div>
+          <h1>Appearance Settings</h1>
+          <p>Customize your IntellMeet dashboard</p>
         </div>
-        <div className="settings-profile-info">
-          <h2>{settings.name || "Your name"}</h2>
-          <p>{settings.email || "Your email"}</p>
-          <span>{settings.role}</span>
-        </div>
-        <div className="settings-profile-badge">
-          <CheckCircle2 size={15} />
-          Local profile
-        </div>
-      </div>
 
-      <div className="settings-layout">
-        <div className="settings-main">
-          <article className="settings-card">
-            <div className="settings-card-heading">
-              <div className="settings-heading-icon purple">
-                <UserRound size={19} />
-              </div>
-              <div>
-                <h2>Profile information</h2>
-                <p>Update your personal information.</p>
-              </div>
-            </div>
+        <button
+          className="settingsSaveButton"
+          onClick={handleSave}
+          type="button"
+        >
+          <Save size={17} />
+          Save Changes
+        </button>
+      </header>
 
-            <div className="settings-form-grid">
-              <label className="settings-field">
-                <span>Full name</span>
-                <input
-                  value={settings.name}
-                  onChange={(e) => update("name", e.target.value)}
-                  placeholder="Enter your name"
-                />
-              </label>
+      <section className="settingsPanel">
+        <h2>Theme Color</h2>
+        <p className="settingsDescription">
+          Choose your dashboard accent color
+        </p>
 
-              <label className="settings-field">
-                <span>Email address</span>
-                <input
-                  type="email"
-                  value={settings.email}
-                  onChange={(e) => update("email", e.target.value)}
-                  placeholder="you@example.com"
-                />
-              </label>
-
-              <label className="settings-field settings-full-width">
-                <span>Role</span>
-                <input
-                  value={settings.role}
-                  onChange={(e) => update("role", e.target.value)}
-                  placeholder="Your job role"
-                />
-              </label>
-            </div>
-          </article>
-
-          <article className="settings-card">
-            <div className="settings-card-heading">
-              <div className="settings-heading-icon blue">
-                <Monitor size={19} />
-              </div>
-              <div>
-                <h2>Appearance & preferences</h2>
-                <p>Choose how IntellMeet looks and behaves.</p>
-              </div>
-            </div>
-
-            <div className="settings-form-grid">
-              <label className="settings-field">
-                <span>Theme</span>
-                <select
-                  value={settings.theme}
-                  onChange={(e) => update("theme", e.target.value)}
-                >
-                  <option>Light</option>
-                  <option>Dark</option>
-                  <option>System</option>
-                </select>
-              </label>
-
-              <label className="settings-field">
-                <span>Language</span>
-                <select
-                  value={settings.language}
-                  onChange={(e) => update("language", e.target.value)}
-                >
-                  <option>English</option>
-                  <option>Tamil</option>
-                  <option>Hindi</option>
-                </select>
-              </label>
-
-              <label className="settings-field settings-full-width">
-                <span>Timezone</span>
-                <select
-                  value={settings.timezone}
-                  onChange={(e) => update("timezone", e.target.value)}
-                >
-                  <option value="Asia/Kolkata">
-                    India Standard Time (IST)
-                  </option>
-                  <option value="UTC">UTC</option>
-                  <option value="America/New_York">
-                    Eastern Time
-                  </option>
-                  <option value="Europe/London">
-                    London Time
-                  </option>
-                </select>
-              </label>
-            </div>
-
-            <p className="settings-helper">
-              These preferences are stored locally. Theme selection does not
-              automatically change the entire app theme yet.
-            </p>
-          </article>
-
-          <article className="settings-card">
-            <div className="settings-card-heading">
-              <div className="settings-heading-icon orange">
-                <Bell size={19} />
-              </div>
-              <div>
-                <h2>Notifications</h2>
-                <p>Choose which reminders you want to enable.</p>
-              </div>
-            </div>
-
-            <div className="settings-toggle-list">
-              <div className="settings-toggle-row">
-                <div>
-                  <strong>Email notifications</strong>
-                  <span>Receive product updates by email.</span>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings.emailNotifications}
-                  className={`settings-switch ${
-                    settings.emailNotifications ? "on" : ""
-                  }`}
-                  onClick={() =>
-                    update(
-                      "emailNotifications",
-                      !settings.emailNotifications
-                    )
-                  }
-                >
-                  <span />
-                </button>
-              </div>
-
-              <div className="settings-toggle-row">
-                <div>
-                  <strong>Meeting reminders</strong>
-                  <span>Remind you about upcoming meetings.</span>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings.meetingReminders}
-                  className={`settings-switch ${
-                    settings.meetingReminders ? "on" : ""
-                  }`}
-                  onClick={() =>
-                    update("meetingReminders", !settings.meetingReminders)
-                  }
-                >
-                  <span />
-                </button>
-              </div>
-
-              <div className="settings-toggle-row">
-                <div>
-                  <strong>Task notifications</strong>
-                  <span>Get updates about assigned tasks.</span>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings.taskNotifications}
-                  className={`settings-switch ${
-                    settings.taskNotifications ? "on" : ""
-                  }`}
-                  onClick={() =>
-                    update("taskNotifications", !settings.taskNotifications)
-                  }
-                >
-                  <span />
-                </button>
-              </div>
-            </div>
-          </article>
-
-          <article className="settings-card">
-            <div className="settings-card-heading">
-              <div className="settings-heading-icon green">
-                <Video size={19} />
-              </div>
-              <div>
-                <h2>Meeting preferences</h2>
-                <p>Set your preferred camera and microphone states.</p>
-              </div>
-            </div>
-
-            <div className="settings-toggle-list">
-              <div className="settings-toggle-row">
-                <div>
-                  <strong>Camera enabled by default</strong>
-                  <span>Preferred camera state when joining meetings.</span>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings.cameraEnabled}
-                  className={`settings-switch ${
-                    settings.cameraEnabled ? "on" : ""
-                  }`}
-                  onClick={() =>
-                    update("cameraEnabled", !settings.cameraEnabled)
-                  }
-                >
-                  <span />
-                </button>
-              </div>
-
-              <div className="settings-toggle-row">
-                <div>
-                  <strong>Microphone enabled by default</strong>
-                  <span>Preferred microphone state when joining meetings.</span>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings.microphoneEnabled}
-                  className={`settings-switch ${
-                    settings.microphoneEnabled ? "on" : ""
-                  }`}
-                  onClick={() =>
-                    update("microphoneEnabled", !settings.microphoneEnabled)
-                  }
-                >
-                  <span />
-                </button>
-              </div>
-            </div>
-          </article>
-
-          <div className="settings-actions">
+        <div className="colorGrid">
+          {COLORS.map((item) => (
             <button
               type="button"
-              className="settings-reset-btn"
-              onClick={resetSettings}
+              key={item.id}
+              className={`colorOption ${
+                theme === item.id ? "selected" : ""
+              }`}
+              onClick={() => updateAppearance("theme", item.id)}
+              aria-pressed={theme === item.id}
             >
-              Reset defaults
+              <span
+                className="colorCircle"
+                style={{ backgroundColor: item.color }}
+              >
+                {theme === item.id && <Check size={18} color="#fff" />}
+              </span>
+              <span>{item.name}</span>
             </button>
+          ))}
+        </div>
+      </section>
 
+      <section className="settingsPanel">
+        <h2>Appearance Mode</h2>
+        <p className="settingsDescription">
+          Select a mode, then save to apply it across the app
+        </p>
+
+        <div className="appearanceGrid">
+          <button
+            type="button"
+            className={`appearanceOption ${
+              mode === "light" ? "selected" : ""
+            }`}
+            onClick={() => updateAppearance("mode", "light")}
+            aria-pressed={mode === "light"}
+          >
+            <Sun size={25} />
+            <div>
+              <strong>Light Mode</strong>
+              <p>Bright background and dark text</p>
+            </div>
+            {mode === "light" && <Check size={19} />}
+          </button>
+
+          <button
+            type="button"
+            className={`appearanceOption ${
+              mode === "dark" ? "selected" : ""
+            }`}
+            onClick={() => updateAppearance("mode", "dark")}
+            aria-pressed={mode === "dark"}
+          >
+            <Moon size={25} />
+            <div>
+              <strong>Dark Mode</strong>
+              <p>Dark background and light text</p>
+            </div>
+            {mode === "dark" && <Check size={19} />}
+          </button>
+        </div>
+      </section>
+
+      <section className="settingsPanel">
+        <h2>Dashboard Style</h2>
+        <p className="settingsDescription">
+          Choose your dashboard card appearance
+        </p>
+
+        <div className="styleGrid">
+          {STYLES.map((item) => (
             <button
               type="button"
-              className="settings-save-btn"
-              onClick={saveSettings}
+              key={item.id}
+              className={`styleOption ${
+                style === item.id ? "selected" : ""
+              }`}
+              onClick={() => updateAppearance("style", item.id)}
+              aria-pressed={style === item.id}
             >
-              <Save size={17} />
-              Save settings
+              <div className={`stylePreview ${item.id}`}>
+                <div className="previewHeader" />
+                <div className="previewContent">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+
+              <strong>{item.name}</strong>
+              <p>{item.description}</p>
+
+              {style === item.id && <Check size={18} />}
             </button>
-          </div>
-
-          {saved && (
-            <div className="settings-saved-message" role="status">
-              <CheckCircle2 size={17} />
-              Settings saved in this browser!
-            </div>
-          )}
+          ))}
         </div>
+      </section>
 
-        <aside className="settings-side">
-          <div className="settings-side-card">
-            <div className="settings-side-icon">
-              <SlidersHorizontal size={21} />
+      <section className="settingsPanel">
+        <h2>Live Preview</h2>
+        <p className="settingsDescription">
+          Preview your selections before saving
+        </p>
+
+        <div
+          className={`settingsPreview ${mode} ${style}`}
+          data-mode={mode}
+          style={{
+            "--preview-primary": selectedColor.color,
+          } as React.CSSProperties}
+        >
+          <div className="previewDashboardHeader">
+            <div className="previewDashboardIcon">
+              <LayoutDashboard size={22} />
             </div>
-            <h3>Your workspace, your way.</h3>
-            <p>
-              Personalize your IntellMeet experience with your preferred
-              profile, reminders and meeting defaults.
-            </p>
+
+            <div>
+              <strong>IntellMeet Dashboard</strong>
+              <p>Meetings & Collaboration Overview</p>
+            </div>
+
+            <Sparkles size={21} className="previewSparkle" />
           </div>
 
-          <div className="settings-side-card settings-local-card">
-            <h3>Storage information</h3>
-            <p>
-              Settings are stored in this browser using localStorage.
-              They are not synced to an account or another device.
-            </p>
+          <div className="previewStats">
+            <div className="previewStatCard">
+              <span>Total Meetings</span>
+              <strong>12 Meetings</strong>
+              <small>Meeting overview preview</small>
+            </div>
+
+            <div className="previewStatCard">
+              <span>Tasks</span>
+              <strong>08 Tasks</strong>
+              <small>Task overview preview</small>
+            </div>
+          </div>
+
+          <div className="previewFooter">
+            <span
+              className="previewStatusDot"
+              style={{ backgroundColor: selectedColor.color }}
+            />
             <span>
-              <CheckCircle2 size={15} />
-              Frontend demo
+              {selectedColor.name} ·{" "}
+              {mode === "dark" ? "Dark Mode" : "Light Mode"} ·{" "}
+              {selectedStyle.name}
             </span>
           </div>
-        </aside>
-      </div>
-    </section>
+        </div>
+      </section>
+
+      <footer className="settingsSaveFooter">
+        <div>
+          <strong>
+            {saved ? "Settings Saved" : "Customize Your Dashboard"}
+          </strong>
+          <p>
+            {saved
+              ? "Your preferences have been saved."
+              : "Your selections will apply after you save."}
+          </p>
+        </div>
+
+        <button
+          className="settingsSaveButton"
+          onClick={handleSave}
+          type="button"
+        >
+          <Save size={17} />
+          {saved ? "Saved" : "Save Changes"}
+        </button>
+      </footer>
+    </div>
   );
 }

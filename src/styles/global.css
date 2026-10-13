@@ -16,3 +16,212 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+/* ===== INTELLMEET GLOBAL THEME ===== */
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --app-bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-hover: #eef2ff;
+  --text-primary: #172033;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: #e2e8f0;
+  --input-bg: #ffffff;
+  --primary-color: #635bff;
+  --sidebar-bg: #ffffff;
+  --header-bg: #ffffff;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #0b1120;
+  --surface: #151e30;
+  --surface-secondary: #1b263a;
+  --surface-hover: #25334c;
+  --text-primary: #f1f5f9;
+  --text-secondary: #bdc8da;
+  --text-muted: #94a3b8;
+  --border-color: #2b3950;
+  --input-bg: #111a2b;
+  --primary-color: #a69cff;
+  --sidebar-bg: #101827;
+  --header-bg: #101827;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--text-primary);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+body,
+#root,
+main,
+aside,
+header,
+section,
+article,
+nav {
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+:root[data-theme="dark"] select {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder {
+  color: var(--text-muted);
+}
+
+
+/* ===== INTELLMEET GLOBAL THEME ===== */
+
+:root {
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-text: #ffffff;
+
+  --app-bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-secondary: #f8fafc;
+  --text-primary: #172033;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+}
+
+/* Dark mode */
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --app-bg: #0b1120;
+  --surface: #151e30;
+  --surface-secondary: #1b263a;
+  --text-primary: #f1f5f9;
+  --text-secondary: #bdc8da;
+  --border-color: #2b3950;
+}
+
+/* Accent colors */
+html[data-accent="indigo"] {
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+}
+
+html[data-accent="blue"] {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+}
+
+html[data-accent="green"] {
+  --primary-color: #059669;
+  --primary-hover: #047857;
+}
+
+html[data-accent="purple"] {
+  --primary-color: #8b5cf6;
+  --primary-hover: #7c3aed;
+}
+
+html[data-accent="orange"] {
+  --primary-color: #f97316;
+  --primary-hover: #ea580c;
+}
+
+html[data-accent="rose"] {
+  --primary-color: #e11d48;
+  --primary-hover: #be123c;
+}
+
+/* App background and text */
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* All common buttons use selected accent color */
+button.settingsSaveButton,
+button.createMeetingButton,
+button.primaryButton,
+button[class*="primary"],
+button[class*="Primary"],
+button[type="submit"] {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+}
+
+button.settingsSaveButton:hover,
+button.createMeetingButton:hover,
+button.primaryButton:hover,
+button[class*="primary"]:hover,
+button[class*="Primary"]:hover,
+button[type="submit"]:hover {
+  background-color: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* Theme-aware surfaces */
+.app-layout {
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+.app-sidebar,
+.app-topbar,
+.settingsPanel,
+.panel,
+.card {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.sidebar-link {
+  color: var(--text-secondary);
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  color: var(--primary-color);
+  background: color-mix(in srgb, var(--primary-color) 13%, var(--surface));
+}
+
+/* Inputs */
+input,
+textarea,
+select {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-secondary);
+}

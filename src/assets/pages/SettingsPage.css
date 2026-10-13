@@ -427,3 +427,286 @@
   }
 }
 
+
+.settingsPage {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 24px;
+  color: var(--text-primary, #172033);
+}
+
+.settingsPageHeader,
+.settingsSaveFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.settingsPageHeader h1 {
+  margin: 0 0 6px;
+  font-size: 27px;
+}
+
+.settingsPageHeader p,
+.settingsDescription,
+.settingsSaveFooter p {
+  margin: 0;
+  color: var(--text-secondary, #64748b);
+}
+
+.settingsPanel {
+  padding: 22px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--card-radius, 16px);
+  background: var(--surface, #fff);
+  color: var(--text-primary, #172033);
+  box-shadow: var(--card-shadow, 0 4px 18px #0f172a0a);
+}
+
+.settingsPanel h2 {
+  margin: 0 0 7px;
+  font-size: 18px;
+}
+
+.settingsDescription {
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.colorGrid,
+.appearanceGrid,
+.styleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.colorOption,
+.appearanceOption,
+.styleOption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  background: var(--surface-secondary, #f8fafc);
+  color: var(--text-primary, #172033);
+  cursor: pointer;
+  text-align: left;
+  transition: 0.2s ease;
+}
+
+.colorOption:hover,
+.appearanceOption:hover,
+.styleOption:hover {
+  border-color: var(--primary-color, #6366f1);
+  transform: translateY(-2px);
+}
+
+.colorOption.selected,
+.appearanceOption.selected,
+.styleOption.selected {
+  border-color: var(--primary-color, #6366f1);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--primary-color, #6366f1) 15%, transparent);
+}
+
+.colorCircle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 50%;
+}
+
+.appearanceOption {
+  min-height: 100px;
+}
+
+.appearanceOption p,
+.styleOption p {
+  margin: 6px 0 0;
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+}
+
+.styleOption {
+  display: block;
+  position: relative;
+}
+
+.stylePreview {
+  height: 95px;
+  padding: 10px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 9px;
+  background: var(--surface, #fff);
+}
+
+.previewHeader {
+  height: 12px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  background: var(--primary-color, #6366f1);
+}
+
+.previewContent {
+  display: grid;
+  gap: 6px;
+}
+
+.previewContent span {
+  height: 12px;
+  border-radius: 4px;
+  background: var(--surface-hover, #eef2ff);
+}
+
+.stylePreview.glass {
+  background: color-mix(in srgb, var(--surface, #fff) 65%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.stylePreview.minimal {
+  border-radius: 2px;
+  box-shadow: none;
+}
+
+.settingsSaveButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 11px 17px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--primary-color, #6366f1);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settingsSaveButton:hover {
+  filter: brightness(1.08);
+}
+
+.settingsPreview {
+  padding: 22px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 14px;
+  background: var(--surface-secondary, #f8fafc);
+  color: var(--text-primary, #172033);
+}
+
+.previewDashboardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.previewDashboardIcon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--primary-color, #6366f1);
+  color: #fff;
+}
+
+.previewDashboardHeader p {
+  margin: 5px 0 0;
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+}
+
+.previewSparkle {
+  margin-left: auto;
+  color: var(--primary-color, #6366f1);
+}
+
+.previewStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.previewStatCard {
+  padding: 17px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  background: var(--surface, #fff);
+}
+
+.previewStatCard span,
+.previewStatCard small {
+  display: block;
+  color: var(--text-secondary, #64748b);
+}
+
+.previewStatCard strong {
+  display: block;
+  margin: 10px 0;
+  font-size: 20px;
+}
+
+.previewFooter {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+  color: var(--text-secondary, #64748b);
+  font-size: 13px;
+}
+
+.previewStatusDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.settingsSaveFooter {
+  padding: 18px 0;
+}
+
+.settingsSaveFooter strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+@media (max-width: 760px) {
+  .settingsPage {
+    padding: 14px;
+  }
+
+  .colorGrid,
+  .appearanceGrid,
+  .styleGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settingsPanel {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .colorGrid,
+  .appearanceGrid,
+  .styleGrid,
+  .previewStats {
+    grid-template-columns: 1fr;
+  }
+
+  .settingsPageHeader h1 {
+    font-size: 22px;
+  }
+}
+
+

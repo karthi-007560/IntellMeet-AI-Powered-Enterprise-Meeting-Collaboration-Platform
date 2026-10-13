@@ -1,29 +1,165 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SectionHeading from "../components/SectionHeading";
 import StatCard from "../components/StatCard";
-import MeetingCard from "../components/MeetingCard";
-import TaskList from "../components/TaskList";
-import { demoMeetings, demoTasks } from "../data/demoData";
+import MeetingCard, { type Meeting } from "../components/MeetingCard";
 import "./DashboardPage.css";
+
+const MEETINGS_STORAGE_KEY = "intellmeet_meetings";
+const TASKS_STORAGE_KEY = "intellmeet_tasks";
+
+type Task = {
+  id: string;
+  title: string;
+  project?: string;
+  dueDate?: string;
+  priority?: string;
+  completed?: boolean;
+};
+
+function getSavedName(): string {
+  try {
+    const savedUser = localStorage.getItem("user");
+
+    if (savedUser) {
+      const user = JSON.parse(savedUser);
+
+      if (user.name) return user.name;
+      if (user.firstName) return user.firstName;
+      if (user.fullName) return user.fullName;
+    }
+  } catch {
+    // Check other saved values below.
+  }
+
+  const name =
+    localStorage.getItem("userName") ||
+    localStorage.getItem("name");
+
+  if (name) return name;
+
+  const email =
+    localStorage.getItem("userEmail") ||
+    localStorage.getItem("email");
+
+  if (email) {
+    return email.split("@")[0].split(/[._-]/)[0];
+  }
+
+  return "User";
+}
+
+function getSavedMeetings(): Meeting[] {
+  try {
+    const saved = localStorage.getItem(MEETINGS_STORAGE_KEY);
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    console.error("Unable to read saved meetings.");
+  }
+
+  return [];
+}
+
+function getSavedTasks(): Task[] {
+  try {
+    const saved = localStorage.getItem(TASKS_STORAGE_KEY);
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    console.error("Unable to read saved tasks.");
+  }
+
+  return [];
+}
 
 export default function DashboardPage() {
   const [search, setSearch] = useState("");
+  const [userName, setUserName] = useState(getSavedName);
+  const [meetings, setMeetings] = useState<Meeting[]>(getSavedMeetings);
+  const [tasks, setTasks] = useState<Task[]>(getSavedTasks);
 
-  const filteredMeetings = demoMeetings.filter((meeting) =>
-    meeting.title.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    const refreshDashboard = () => {
+      setUserName(getSavedName());
+      setMeetings(getSavedMeetings());
+      setTasks(getSavedTasks());
+    };
+
+    window.addEventListener("storage", refreshDashboard);
+    window.addEventListener("intellmeet_meetings_updated", refreshDashboard);
+    window.addEventListener("intellmeet_tasks_updated", refreshDashboard);
+    window.addEventListener("user_updated", refreshDashboard);
+
+    return () => {
+      window.removeEventListener("storage", refreshDashboard);
+      window.removeEventListener(
+        "intellmeet_meetings_updated",
+        refreshDashboard
+      );
+      window.removeEventListener(
+        "intellmeet_tasks_updated",
+        refreshDashboard
+      );
+      window.removeEventListener("user_updated", refreshDashboard);
+    };
+  }, []);
+
+  const query = search.trim().toLowerCase();
+
+  const filteredMeetings = meetings.filter((meeting) =>
+    [
+      meeting.title,
+      meeting.category,
+      meeting.date,
+      meeting.time,
+      meeting.duration,
+      meeting.status ?? "",
+      ...(meeting.participants ?? []),
+    ].some((value) =>
+      String(value ?? "").toLowerCase().includes(query)
+    )
   );
+
+  const filteredTasks = tasks.filter((task) =>
+    [
+      task.title,
+      task.project ?? "",
+      task.dueDate ?? "",
+      task.priority ?? "",
+      task.completed ? "completed" : "pending",
+    ].some((value) =>
+      String(value ?? "").toLowerCase().includes(query)
+    )
+  );
+
+  const upcomingCount = meetings.filter(
+    (meeting) =>
+      (meeting.status ?? "Upcoming").toLowerCase() !== "completed"
+  ).length;
+
+  const completedTasks = tasks.filter(
+    (task) => task.completed
+  ).length;
 
   return (
     <div className="dashboard-page">
       <SectionHeading
         eyebrow="YOUR WORKSPACE"
-        title="Good morning, Karthik 👋"
-        subtitle="Here's what's happening with your team today."
+        title={`Welcome, ${userName} `}
+        subtitle="Manage your meetings and tasks in one place."
         action={
           <button
             className="dashboard-primary-button"
-            onClick={() => alert("Create Meeting feature will be connected next!")}
+            onClick={() => {
+              window.location.href = "/meetings";
+            }}
           >
             + Create meeting
           </button>
@@ -33,60 +169,50 @@ export default function DashboardPage() {
       <section className="dashboard-stats">
         <StatCard
           title="Total Meetings"
-          value="24"
-          change="+12%"
-          description="vs. last month"
-          icon="▣"
-          color="purple"
+          value={meetings.length}
+          change="Your meetings"
+          description="meetings saved in your workspace"
+  
         />
+
         <StatCard
           title="Upcoming Meetings"
-          value="08"
-          change="3 today"
-          description="scheduled meetings"
-          icon="◷"
-          color="blue"
-        />
+          value={upcomingCount}
+          change="Scheduled"
+          description="meetings not yet completed"
+         />
+
         <StatCard
           title="Tasks Completed"
-          value="18/24"
-          change="75%"
-          description="completion rate"
-          icon="✓"
-          color="green"
-        />
+          value={`${completedTasks}/${tasks.length}`}
+          change="Your tasks"
+          description="completed tasks"
+          />
+
         <StatCard
-          title="Hours Saved"
-          value="12.5h"
-          change="+2.5h"
-          description="with AI summaries"
-          icon="✳"
-          color="orange"
+          title="Pending Tasks"
+          value={tasks.length - completedTasks}
+          change="Remaining"
+          description="tasks waiting to be completed"
+  
         />
       </section>
 
       <section className="dashboard-section">
         <div className="dashboard-section-heading">
           <div>
-            <h2>Upcoming Meetings</h2>
-            <p>Stay prepared for your next conversations.</p>
+            <h2>Meetings</h2>
+            <p>Your manually created meetings appear here.</p>
           </div>
-
-          <button
-            className="dashboard-text-button"
-            onClick={() => alert("Open the Meetings page from the sidebar.")}
-          >
-            View all →
-          </button>
         </div>
 
         <input
           className="meeting-search"
           type="search"
-          placeholder="Search meetings..."
+          placeholder="Search your meetings and tasks..."
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          aria-label="Search meetings"
+          aria-label="Search your meetings and tasks"
         />
 
         <div className="dashboard-meeting-grid">
@@ -96,12 +222,18 @@ export default function DashboardPage() {
                 key={meeting.id}
                 meeting={meeting}
                 onJoin={(selectedMeeting) =>
-                  alert(`Joining: ${selectedMeeting.title}\nDemo only — video calling is not connected yet.`)
+                  alert(
+                    `Meeting: ${selectedMeeting.title}\nVideo calling is not connected yet.`
+                  )
                 }
               />
             ))
           ) : (
-            <p className="dashboard-no-results">No meetings found.</p>
+            <p className="dashboard-no-results">
+              {query
+                ? "No matching meetings found."
+                : "No meetings yet. Click Create Meeting to add your first meeting."}
+            </p>
           )}
         </div>
       </section>
@@ -110,16 +242,39 @@ export default function DashboardPage() {
         <div className="dashboard-section-heading">
           <div>
             <h2>Tasks & Action Items</h2>
-            <p>Keep track of your team's next steps.</p>
+            <p>Your manually created tasks appear here.</p>
           </div>
         </div>
 
-        <TaskList tasks={demoTasks} />
+        {filteredTasks.length > 0 ? (
+          <div className="dashboard-manual-tasks">
+            {filteredTasks.map((task) => (
+              <div className="dashboard-task-item" key={task.id}>
+                <div>
+                  <h3>{task.title}</h3>
+                  {task.project && <p>Project: {task.project}</p>}
+                  {task.dueDate && <p>Due: {task.dueDate}</p>}
+                  {task.priority && <p>Priority: {task.priority}</p>}
+                </div>
+
+                <span>
+                  {task.completed ? "Completed" : "Pending"}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="dashboard-no-results">
+            {query
+              ? "No matching tasks found."
+              : "No tasks yet. Add tasks from your Tasks page."}
+          </p>
+        )}
       </section>
 
       <footer className="dashboard-footer">
         IntellMeet · AI-powered collaboration
-        <span>Frontend demo · Sample data</span>
+        <span>Your workspace</span>
       </footer>
     </div>
   );

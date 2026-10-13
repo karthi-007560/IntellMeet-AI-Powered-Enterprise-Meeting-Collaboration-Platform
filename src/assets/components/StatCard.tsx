@@ -6,8 +6,6 @@ type StatCardProps = {
   value: string | number;
   change?: string;
   description?: string;
-  icon: string;
-  color?: "purple" | "blue" | "green" | "orange";
 };
 
 export default function StatCard({
@@ -15,14 +13,12 @@ export default function StatCard({
   value,
   change,
   description,
-  icon,
-  color = "purple",
+ 
 }: StatCardProps) {
   return (
     <article className="stat-card">
       <div className="stat-card-top">
         <span className="stat-card-title">{title}</span>
-        <div className={`stat-card-icon ${color}`}>{icon}</div>
       </div>
 
       <div className="stat-card-value">{value}</div>

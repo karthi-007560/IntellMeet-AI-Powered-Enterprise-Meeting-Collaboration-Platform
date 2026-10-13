@@ -478,7 +478,11 @@
 }
 
 .workspace-empty {
-  padding: 45px 20px;
+  padding: 45px;
+  gap: 12px;
+    display: flex;
+  flex-direction: column;
+  align-items: center;
   color: var(--text-secondary, #85849a);
   text-align: center;
 }

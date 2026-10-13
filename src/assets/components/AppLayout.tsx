@@ -1,23 +1,127 @@
 
-import { useState, type ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useState, type ReactNode } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import "./AppLayout.css";
 
 type AppLayoutProps = {
   children: ReactNode;
 };
 
+type Appearance = {
+  theme: string;
+  mode: "light" | "dark";
+  style: string;
+};
+
+const STORAGE_KEY = "intellmeet_appearance";
+
 const navigation = [
-  { label: "Dashboard", path: "/", icon: "▦" },
-  { label: "Meetings", path: "/meetings", icon: "▣" },
-  { label: "Tasks", path: "/tasks", icon: "✓" },
-  { label: "Workspace", path: "/workspace", icon: "▤" },
-  { label: "Analytics", path: "/analytics", icon: "▥" },
-  { label: "Settings", path: "/settings", icon: "⚙" },
+  { label: "Dashboard", path: "/" },
+  { label: "Meetings", path: "/meetings" },
+  { label: "Tasks", path: "/tasks" },
+  { label: "Workspace", path: "/workspace" },
+  { label: "Analytics", path: "/analytics" },
+  { label: "Settings", path: "/settings" },
 ];
+
+function readSavedAppearance(): Appearance {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (saved) {
+      const parsed = JSON.parse(saved);
+
+      return {
+        theme: parsed.theme || "indigo",
+        mode: parsed.mode === "dark" ? "dark" : "light",
+        style: parsed.style || "modern",
+      };
+    }
+  } catch (error) {
+    console.error("Could not restore appearance:", error);
+  }
+
+  return { theme: "indigo", mode: "light", style: "modern" };
+}
+
+function applySavedAppearance(appearance: Appearance) {
+  const root = document.documentElement;
+
+  root.dataset.theme = appearance.mode;
+  root.dataset.mode = appearance.mode;
+  root.dataset.accent = appearance.theme;
+  root.dataset.style = appearance.style;
+  root.style.colorScheme = appearance.mode;
+
+  const colors: Record<string, string> = {
+    indigo: "#6366f1",
+    blue: "#2563eb",
+    green: "#059669",
+    purple: "#8b5cf6",
+    orange: "#f97316",
+    rose: "#e11d48",
+  };
+
+  const accent = colors[appearance.theme] || colors.indigo;
+
+  root.style.setProperty("--primary-color", accent);
+  root.style.setProperty("--primary-hover", accent);
+}
 
 export default function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
+  const location = useLocation();
+
+  useEffect(() => {
+    // Restore the saved theme on startup.
+    applySavedAppearance(readSavedAppearance());
+
+    // React to settings only after SettingsPage saves them.
+    const handleAppearanceUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<Appearance>;
+
+      if (customEvent.detail) {
+        applySavedAppearance(customEvent.detail);
+      } else {
+        applySavedAppearance(readSavedAppearance());
+      }
+    };
+
+    window.addEventListener(
+      "intellmeet_appearance_updated",
+      handleAppearanceUpdate
+    );
+
+    return () => {
+      window.removeEventListener(
+        "intellmeet_appearance_updated",
+        handleAppearanceUpdate
+      );
+    };
+  }, []);
+
+  const currentPage =
+    navigation.find((item) => item.path === location.pathname)?.label ||
+    location.pathname
+      .split("/")
+      .filter(Boolean)
+      .pop()
+      ?.replace(/-/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase()) ||
+    "Dashboard";
+
+  const email =
+    localStorage.getItem("userEmail") ||
+    localStorage.getItem("email") ||
+    "";
+
+  const firstName =
+    email.split("@")[0]?.split(/[._\s-]/)[0] || "User";
+
+  const avatarLetter = firstName.charAt(0).toUpperCase();
 
   return (
     <div className="app-layout">
@@ -29,7 +133,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
         />
       )}
 
-      <aside className={`app-sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
+      <aside
+        className={`app-sidebar ${sidebarOpen ? "sidebar-open" : ""}`}
+      >
         <div className="app-brand">
           <div className="brand-mark">IM</div>
           <div>
@@ -49,9 +155,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
               className={({ isActive }) =>
                 `sidebar-link ${isActive ? "active" : ""}`
               }
-              onClick={() => setSidebarOpen(false)}
+              onClick={() => {
+                setSidebarOpen(false);
+                setSearchText("");
+                setSearchOpen(false);
+              }}
             >
-              <span className="sidebar-icon">{item.icon}</span>
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -59,16 +168,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
         <div className="sidebar-bottom">
           <div className="sidebar-help">
-            <div className="help-icon">?</div>
             <strong>Need help?</strong>
             <p>Explore your workspace and get things done.</p>
           </div>
 
           <div className="sidebar-user">
-            <div className="user-avatar">K</div>
+            <div className="user-avatar">{avatarLetter}</div>
             <div className="user-details">
-              <strong>Karthik</strong>
-              <span>Frontend Developer</span>
+              <strong>{firstName}</strong>
+              <span>{email || "Logged-in user"}</span>
             </div>
             <span className="user-menu">···</span>
           </div>
@@ -79,7 +187,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
         <header className="app-topbar">
           <button
             className="menu-toggle"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => setSidebarOpen((previous) => !previous)}
             aria-label="Toggle navigation"
           >
             ☰
@@ -88,14 +196,41 @@ export default function AppLayout({ children }: AppLayoutProps) {
           <div className="topbar-breadcrumb">
             <span>Workspace</span>
             <span className="breadcrumb-divider">/</span>
-            <strong>IntellMeet</strong>
+            <strong>{currentPage}</strong>
           </div>
 
           <div className="topbar-actions">
-            <label className="topbar-search">
-              <span>⌕</span>
-              <input aria-label="Search" placeholder="Search anything..." />
-              <kbd>⌘ K</kbd>
+            <label
+              className={`topbar-search ${searchOpen ? "search-open" : ""}`}
+            >
+              <button
+                type="button"
+                className="search-toggle"
+                aria-label="Toggle search"
+                onClick={() => {
+                  setSearchOpen((previous) => !previous);
+                  setSearchText("");
+                }}
+              >
+                🔍
+              </button>
+
+              {searchOpen && (
+                <input
+                  autoFocus
+                  type="search"
+                  aria-label={`Search ${currentPage}`}
+                  placeholder={`Search ${currentPage.toLowerCase()}...`}
+                  value={searchText}
+                  onChange={(event) => setSearchText(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      setSearchText("");
+                      setSearchOpen(false);
+                    }
+                  }}
+                />
+              )}
             </label>
 
             <button
@@ -103,10 +238,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
               aria-label="Notifications"
               onClick={() => alert("You're all caught up!")}
             >
-              ♧<span />
+              🔔<span />
             </button>
 
-            <div className="topbar-avatar">K</div>
+            <div className="topbar-avatar" title={email || firstName}>
+              {avatarLetter}
+            </div>
           </div>
         </header>
 
