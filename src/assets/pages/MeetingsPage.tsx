@@ -212,15 +212,15 @@ export default function MeetingsPage() {
       </div>
 
       <div className="meetings-toolbar">
-        <div className="meetings-search">
-          <Search size={18} />
+
           <input
+          className="meeting-search"
             type="search"
             placeholder="Search your meetings..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
-        </div>
+
 
         <div className="meeting-filters">
           {(

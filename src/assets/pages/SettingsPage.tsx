@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Save,
   Sun,
@@ -38,9 +38,21 @@ const COLORS: { id: Theme; name: string; color: string }[] = [
 ];
 
 const STYLES: { id: Style; name: string; description: string }[] = [
-  { id: "modern", name: "Modern", description: "Clean cards and soft shadows" },
-  { id: "glass", name: "Glass", description: "Transparent surfaces and blur" },
-  { id: "minimal", name: "Minimal", description: "Simple and clean layout" },
+  {
+    id: "modern",
+    name: "Modern",
+    description: "Clean cards and soft shadows",
+  },
+  {
+    id: "glass",
+    name: "Glass",
+    description: "Transparent surfaces and blur",
+  },
+  {
+    id: "minimal",
+    name: "Minimal",
+    description: "Simple and clean layout",
+  },
 ];
 
 const ACCENT_COLORS: Record<Theme, string> = {
@@ -55,28 +67,32 @@ const ACCENT_COLORS: Record<Theme, string> = {
 function readAppearance(): Appearance {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
 
-      return {
-        theme: ACCENT_COLORS[parsed.theme as Theme]
-          ? parsed.theme
-          : DEFAULT_APPEARANCE.theme,
-        mode: parsed.mode === "dark" ? "dark" : "light",
-        style: ["modern", "glass", "minimal"].includes(parsed.style)
-          ? parsed.style
-          : DEFAULT_APPEARANCE.style,
-      };
-    }
+    if (!saved) return { ...DEFAULT_APPEARANCE };
+
+    const parsed = JSON.parse(saved);
+
+    return {
+      theme: Object.prototype.hasOwnProperty.call(
+        ACCENT_COLORS,
+        parsed.theme
+      )
+        ? parsed.theme
+        : DEFAULT_APPEARANCE.theme,
+      mode: parsed.mode === "dark" ? "dark" : "light",
+      style: ["modern", "glass", "minimal"].includes(parsed.style)
+        ? parsed.style
+        : DEFAULT_APPEARANCE.style,
+    };
   } catch (error) {
     console.error("Could not read appearance settings:", error);
+    return { ...DEFAULT_APPEARANCE };
   }
-
-  return { ...DEFAULT_APPEARANCE };
 }
 
 function applyAppearance(appearance: Appearance) {
   const root = document.documentElement;
+  const primary = ACCENT_COLORS[appearance.theme];
 
   root.dataset.theme = appearance.mode;
   root.dataset.mode = appearance.mode;
@@ -84,14 +100,59 @@ function applyAppearance(appearance: Appearance) {
   root.dataset.style = appearance.style;
   root.style.colorScheme = appearance.mode;
 
-  root.style.setProperty(
-    "--primary-color",
-    ACCENT_COLORS[appearance.theme]
-  );
+  root.style.setProperty("--primary-color", primary);
+  root.style.setProperty("--primary-hover", primary);
 
+  // Shared colors for pages, cards, search boxes and inputs.
   root.style.setProperty(
-    "--primary-hover",
-    ACCENT_COLORS[appearance.theme]
+    "--app-bg",
+    appearance.mode === "dark" ? "#0b1120" : "#f5f7fb"
+  );
+  root.style.setProperty(
+    "--surface",
+    appearance.mode === "dark" ? "#151e30" : "#ffffff"
+  );
+  root.style.setProperty(
+    "--surface-secondary",
+    appearance.mode === "dark" ? "#1b263a" : "#f8fafc"
+  );
+  root.style.setProperty(
+    "--surface-hover",
+    appearance.mode === "dark" ? "#25334c" : "#eef2ff"
+  );
+  root.style.setProperty(
+    "--text-primary",
+    appearance.mode === "dark" ? "#f1f5f9" : "#182230"
+  );
+  root.style.setProperty(
+    "--text-secondary",
+    appearance.mode === "dark" ? "#bdc8da" : "#64748b"
+  );
+  root.style.setProperty(
+    "--text-muted",
+    appearance.mode === "dark" ? "#94a3b8" : "#98a2b3"
+  );
+  root.style.setProperty(
+    "--border-color",
+    appearance.mode === "dark" ? "#2b3950" : "#e2e8f0"
+  );
+  root.style.setProperty(
+    "--input-bg",
+    appearance.mode === "dark" ? "#111a2b" : "#ffffff"
+  );
+  root.style.setProperty(
+    "--sidebar-bg",
+    appearance.mode === "dark" ? "#101827" : "#ffffff"
+  );
+  root.style.setProperty(
+    "--header-bg",
+    appearance.mode === "dark" ? "#101827" : "#ffffff"
+  );
+  root.style.setProperty(
+    "--card-shadow",
+    appearance.mode === "dark"
+      ? "0 4px 14px rgb(0 0 0 / 15%)"
+      : "0 4px 14px rgb(15 23 42 / 5%)"
   );
 
   window.dispatchEvent(
@@ -102,15 +163,29 @@ function applyAppearance(appearance: Appearance) {
 }
 
 export default function SettingsPage() {
-  // The saved settings are the initial values.
-  const [appearance, setAppearance] =
-    useState<Appearance>(() => readAppearance());
-
-  // Unsaved selections stay separate from the currently applied theme.
   const [draft, setDraft] = useState<Appearance>(() => readAppearance());
   const [saved, setSaved] = useState(false);
 
   const { theme, mode, style } = draft;
+
+  useEffect(() => {
+    // Keep the saved theme applied when this page opens.
+    applyAppearance(readAppearance());
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) {
+        const updated = readAppearance();
+        setDraft(updated);
+        applyAppearance(updated);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   const updateAppearance = <K extends keyof Appearance>(
     key: K,
@@ -127,20 +202,18 @@ export default function SettingsPage() {
   const handleSave = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
-
-      // Apply the entire app theme only after Save is clicked.
       applyAppearance(draft);
-      setAppearance({ ...draft });
-      setSaved(true);
 
       window.dispatchEvent(
         new CustomEvent("intellmeet_settings_updated", {
           detail: draft,
         })
       );
+
+      setSaved(true);
     } catch (error) {
       console.error("Could not save appearance settings:", error);
-      alert("Settings save panna mudiyala. Please try again.");
+      window.alert("Settings save panna mudiyala. Please try again.");
     }
   };
 
@@ -159,9 +232,9 @@ export default function SettingsPage() {
         </div>
 
         <button
+          type="button"
           className="settingsSaveButton"
           onClick={handleSave}
-          type="button"
         >
           <Save size={17} />
           Save Changes
@@ -200,7 +273,7 @@ export default function SettingsPage() {
       <section className="settingsPanel">
         <h2>Appearance Mode</h2>
         <p className="settingsDescription">
-          Select a mode, then save to apply it across the app
+          Select Light or Dark mode, then save your changes
         </p>
 
         <div className="appearanceGrid">
@@ -282,9 +355,11 @@ export default function SettingsPage() {
         <div
           className={`settingsPreview ${mode} ${style}`}
           data-mode={mode}
-          style={{
-            "--preview-primary": selectedColor.color,
-          } as React.CSSProperties}
+          style={
+            {
+              "--preview-primary": selectedColor.color,
+            } as React.CSSProperties
+          }
         >
           <div className="previewDashboardHeader">
             <div className="previewDashboardIcon">
@@ -340,9 +415,9 @@ export default function SettingsPage() {
         </div>
 
         <button
+          type="button"
           className="settingsSaveButton"
           onClick={handleSave}
-          type="button"
         >
           <Save size={17} />
           {saved ? "Saved" : "Save Changes"}

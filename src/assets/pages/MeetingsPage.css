@@ -494,3 +494,187 @@
     padding: 20px;
   }
 }
+
+
+
+/* ===== MEETING PAGE THEME FIX ===== */
+
+.meetings-page,
+.meeting-page {
+  background: var(--app-bg, #f7f8fc);
+  color: var(--text-primary, #182230);
+  min-height: 100%;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* Headings and descriptions */
+.meetings-page h1,
+.meetings-page h2,
+.meetings-page h3,
+.meeting-page h1,
+.meeting-page h2,
+.meeting-page h3 {
+  color: var(--text-primary, #182230);
+}
+
+.meetings-page p,
+.meeting-page p {
+  color: var(--text-secondary, #64748b);
+}
+
+/* Statistics cards */
+.meetings-page .stat-card,
+.meetings-page .meeting-stat-card,
+.meetings-page .stats-card,
+.meeting-page .stat-card,
+.meeting-page .meeting-stat-card,
+.meeting-page .stats-card {
+  background: var(--surface, #ffffff);
+  color: var(--text-primary, #182230);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow, 0 4px 14px rgb(15 23 42 / 5%));
+}
+
+/* Search section */
+.meetings-page .search-box,
+.meetings-page .meeting-search,
+.meetings-page .search-container,
+.meetings-page .search-input,
+.meeting-page .search-box,
+.meeting-page .meeting-search,
+.meeting-page .search-container,
+.meeting-page .search-input {
+  background: var(--input-bg, #ffffff);
+  color: var(--text-primary, #182230);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 11px;
+}
+
+.meetings-page input,
+.meetings-page select,
+.meetings-page textarea,
+.meeting-page input,
+.meeting-page select,
+.meeting-page textarea {
+  background: var(--input-bg, #ffffff);
+  color: var(--text-primary, #182230);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.meetings-page input::placeholder,
+.meeting-page input::placeholder {
+  color: var(--text-muted, #94a3b8);
+  opacity: 1;
+}
+
+/* Search focus */
+.meetings-page input:focus,
+.meetings-page select:focus,
+.meeting-page input:focus,
+.meeting-page select:focus {
+  outline: 2px solid var(--primary-color, #6366f1);
+  outline-offset: 1px;
+}
+
+/* Filter buttons */
+.meetings-page .filter-btn,
+.meetings-page .filter-button,
+.meetings-page .status-filter button,
+.meetings-page .meeting-filters button,
+.meeting-page .filter-btn,
+.meeting-page .filter-button,
+.meeting-page .status-filter button,
+.meeting-page .meeting-filters button {
+  background: var(--surface, #ffffff);
+  color: var(--text-secondary, #64748b);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* Active filter */
+.meetings-page .filter-btn.active,
+.meetings-page .filter-button.active,
+.meetings-page .status-filter button.active,
+.meetings-page .meeting-filters button.active,
+.meeting-page .filter-btn.active,
+.meeting-page .filter-button.active,
+.meeting-page .status-filter button.active,
+.meeting-page .meeting-filters button.active {
+  background: var(--primary-color, #6366f1);
+  color: #ffffff;
+  border-color: var(--primary-color, #6366f1);
+}
+
+/* Primary buttons */
+.meetings-page .btn-primary,
+.meetings-page .primary-button,
+.meetings-page .create-meeting-btn,
+.meeting-page .btn-primary,
+.meeting-page .primary-button,
+.meeting-page .create-meeting-btn {
+  background: var(--primary-color, #6366f1);
+  color: #ffffff;
+  border: 1px solid var(--primary-color, #6366f1);
+}
+
+.meetings-page .btn-primary:hover,
+.meetings-page .primary-button:hover,
+.meetings-page .create-meeting-btn:hover,
+.meeting-page .btn-primary:hover,
+.meeting-page .primary-button:hover,
+.meeting-page .create-meeting-btn:hover {
+  background: var(--primary-hover, #5046e5);
+}
+
+/* Meeting cards and empty state */
+.meetings-page .meeting-card,
+.meetings-page .meeting-item,
+.meetings-page .empty-state,
+.meetings-page .meeting-list,
+.meeting-page .meeting-card,
+.meeting-page .meeting-item,
+.meeting-page .empty-state,
+.meeting-page .meeting-list {
+  background: var(--surface, #ffffff);
+  color: var(--text-primary, #182230);
+  border-color: var(--border-color, #e2e8f0);
+}
+
+/* ===== DARK MODE ===== */
+:root[data-mode="dark"],
+:root[data-theme="dark"] {
+  --app-bg: #0b1120;
+  --surface: #151e30;
+  --surface-secondary: #1b263a;
+  --surface-hover: #25334c;
+  --text-primary: #f1f5f9;
+  --text-secondary: #bdc8da;
+  --text-muted: #94a3b8;
+  --border-color: #2b3950;
+  --input-bg: #111a2b;
+  --card-shadow: 0 4px 14px rgb(0 0 0 / 15%);
+}
+
+/* Native dropdown options */
+:root[data-mode="dark"] select option,
+:root[data-theme="dark"] select option {
+  background: #151e30;
+  color: #f1f5f9;
+}
+
+/* ===== LIGHT MODE ===== */
+:root[data-mode="light"],
+:root[data-theme="light"] {
+  --app-bg: #f7f8fc;
+  --surface: #ffffff;
+  --surface-secondary: #f8fafc;
+  --surface-hover: #eef2ff;
+  --text-primary: #182230;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --border-color: #e2e8f0;
+  --input-bg: #ffffff;
+  --card-shadow: 0 4px 14px rgb(15 23 42 / 5%);
+}

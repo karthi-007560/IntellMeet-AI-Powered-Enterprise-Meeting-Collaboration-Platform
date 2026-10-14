@@ -208,3 +208,125 @@ body,
 .settings-page .settings-helper {
   color: var(--text-secondary);
 }
+
+/* ===== INTELLMEET GLOBAL THEME ===== */
+
+:root {
+  --app-bg: #f5f7fc;
+  --surface: #ffffff;
+  --surface-secondary: #f8fafc;
+  --text-primary: #182230;
+  --text-secondary: #667085;
+  --border-color: #e4e7ec;
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --input-bg: #ffffff;
+}
+
+html[data-mode="dark"],
+html[data-theme="dark"] {
+  --app-bg: #0b1120;
+  --surface: #151e30;
+  --surface-secondary: #1b263a;
+  --text-primary: #f1f5f9;
+  --text-secondary: #bdc8da;
+  --border-color: #2b3950;
+  --input-bg: #111a2b;
+}
+
+html[data-accent="blue"] {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+}
+
+html[data-accent="green"] {
+  --primary-color: #059669;
+  --primary-hover: #047857;
+}
+
+html[data-accent="purple"] {
+  --primary-color: #8b5cf6;
+  --primary-hover: #7c3aed;
+}
+
+html[data-accent="orange"] {
+  --primary-color: #f97316;
+  --primary-hover: #ea580c;
+}
+
+html[data-accent="rose"] {
+  --primary-color: #e11d48;
+  --primary-hover: #be123c;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* Common page surfaces */
+.page,
+.app-layout,
+.app-main,
+.app-content {
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+.settingsPanel,
+.ais-content-card,
+.ais-stat-card,
+.ais-meeting-banner {
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* Common form controls */
+input,
+select,
+textarea {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Common buttons */
+.settingsSaveButton,
+.ais-btn-primary {
+  background: var(--primary-color);
+  color: #ffffff;
+  border-color: var(--primary-color);
+}
+
+.settingsSaveButton:hover,
+.ais-btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}

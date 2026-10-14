@@ -4,7 +4,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "../src/assets/components/AppLayout";
 import DashboardPage from "../src/assets/pages/DashboardPage";
 import WorkspacePage from "../src/assets/pages/WorkspacePage";
-import AnalyticsPage from "../src/assets/pages/AnalyticsPage";
+import AnalyticsPage from "./assets/pages/AnalyticsPage";
 import SettingsPage from "../src/assets/pages/SettingsPage";
 import NotificationsPage from "../src/assets/pages/NotificationsPage";
 import MeetingsPage from "../src/assets/pages/MeetingsPage";

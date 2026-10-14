@@ -657,3 +657,68 @@ button {
     animation-iteration-count: 1 !important;
   }
 }
+
+.app-layout {
+  min-height: 100vh;
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+.app-sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border-color);
+}
+
+.sidebar-link {
+  color: var(--text-secondary);
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.sidebar-help {
+  background: var(--surface-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.app-topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.topbar-breadcrumb strong {
+  color: var(--text-primary);
+}
+
+.topbar-search {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.topbar-search input {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.menu-toggle {
+  color: var(--text-primary);
+}
+
+.notification-button {
+  background: var(--surface-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.user-details strong {
+  color: var(--text-primary);
+}
+
+.user-details span {
+  color: var(--text-secondary);
+}

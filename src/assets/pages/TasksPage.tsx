@@ -204,9 +204,9 @@ export default function TasksPage() {
       </div>
 
       <div className="tasks-toolbar">
-        <div className="tasks-search">
-          <Search size={18} />
+        <div >
           <input
+          className="tasks-search"
             type="search"
             placeholder="Search your tasks or projects..."
             value={search}

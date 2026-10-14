@@ -225,3 +225,397 @@ input::placeholder,
 textarea::placeholder {
   color: var(--text-secondary);
 }
+
+
+/* ==========================================
+   INTELLMEET - GLOBAL DARK/LIGHT THEME FIX
+   ========================================== */
+
+:root {
+  --app-bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-secondary: #f8fafc;
+  --text-primary: #172033;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --input-bg: #ffffff;
+}
+
+/* DARK THEME */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --app-bg: #0b1120;
+  --surface: #151e30;
+  --surface-secondary: #111a2b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #bdc8da;
+  --border-color: #2b3950;
+  --input-bg: #111a2b;
+}
+
+/* ACCENT COLORS */
+html[data-accent="indigo"] {
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+}
+
+html[data-accent="blue"] {
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+}
+
+html[data-accent="green"] {
+  --primary-color: #059669;
+  --primary-hover: #047857;
+}
+
+html[data-accent="purple"] {
+  --primary-color: #8b5cf6;
+  --primary-hover: #7c3aed;
+}
+
+html[data-accent="orange"] {
+  --primary-color: #f97316;
+  --primary-hover: #ea580c;
+}
+
+html[data-accent="rose"] {
+  --primary-color: #e11d48;
+  --primary-hover: #be123c;
+}
+
+/* PAGE BACKGROUND AND TEXT */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+.app-layout,
+.app-main,
+.app-content,
+.dashboard-page,
+.dashboardPage,
+.meetings-page,
+.meetingsPage {
+  background: var(--app-bg);
+  color: var(--text-primary);
+}
+
+/* DASHBOARD CARDS AND PANELS */
+html[data-theme="dark"] .stat-card,
+html[data-theme="dark"] .statCard,
+html[data-theme="dark"] .dashboard-card,
+html[data-theme="dark"] .dashboardCard,
+html[data-theme="dark"] .meeting-card,
+html[data-theme="dark"] .meetingCard,
+html[data-theme="dark"] .task-card,
+html[data-theme="dark"] .taskCard,
+html[data-theme="dark"] .ais-content-card,
+html[data-theme="dark"] .ais-stat-card {
+  background: var(--surface) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none;
+}
+
+/* CARD TEXT */
+html[data-theme="dark"] .stat-card *,
+html[data-theme="dark"] .statCard *,
+html[data-theme="dark"] .dashboard-card *,
+html[data-theme="dark"] .dashboardCard *,
+html[data-theme="dark"] .meeting-card *,
+html[data-theme="dark"] .meetingCard *,
+html[data-theme="dark"] .task-card *,
+html[data-theme="dark"] .taskCard * {
+  border-color: var(--border-color);
+}
+
+/* SEARCH BOXES - DASHBOARD + MEETINGS */
+html[data-theme="dark"] input[type="search"],
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input:not([type]),
+html[data-theme="dark"] .search-box,
+html[data-theme="dark"] .searchBox,
+html[data-theme="dark"] .search-input,
+html[data-theme="dark"] .searchInput,
+html[data-theme="dark"] .ais-search,
+html[data-theme="dark"] .topbar-search {
+  background: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1;
+}
+
+html[data-theme="dark"] .ais-search input,
+html[data-theme="dark"] .topbar-search input {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+/* DROPDOWNS */
+html[data-theme="dark"] select,
+html[data-theme="dark"] option {
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* BUTTON COLORS - REMOVE PINK/HARDCODED PURPLE */
+button.settingsSaveButton,
+button.createMeetingButton,
+button.ais-btn-primary,
+button.primaryButton,
+button[class*="primary"],
+button[class*="Primary"],
+button[type="submit"] {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+button.settingsSaveButton:hover,
+button.createMeetingButton:hover,
+button.ais-btn-primary:hover,
+button.primaryButton:hover,
+button[class*="primary"]:hover,
+button[class*="Primary"]:hover,
+button[type="submit"]:hover {
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+}
+
+/* SIDEBAR AND TOPBAR */
+html[data-theme="dark"] .app-sidebar,
+html[data-theme="dark"] .app-topbar {
+  background: var(--surface-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+html[data-theme="dark"] .sidebar-link {
+  color: var(--text-secondary);
+}
+
+html[data-theme="dark"] .sidebar-link:hover,
+html[data-theme="dark"] .sidebar-link.active {
+  color: var(--primary-color);
+  background: color-mix(
+    in srgb,
+    var(--primary-color) 18%,
+    var(--surface)
+  );
+}
+
+/* SMOOTH THEME TRANSITION */
+body,
+.app-sidebar,
+.app-topbar,
+.app-content,
+.stat-card,
+.statCard,
+.dashboard-card,
+.dashboardCard,
+.meeting-card,
+.meetingCard,
+.task-card,
+.taskCard,
+input,
+select,
+textarea,
+button {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+
+/* IntellMeet Global Theme Variables */
+
+:root {
+  color-scheme: light;
+
+  --app-bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-secondary: #f8fafc;
+  --text-primary: #182230;
+  --text-secondary: #667085;
+  --border-color: #e5e7eb;
+  --input-bg: #ffffff;
+  --input-text: #182230;
+  --input-placeholder: #98a2b3;
+  --hover-bg: #f1f3f9;
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --shadow-color: rgb(15 23 42 / 8%);
+}
+
+:root[data-theme="dark"],
+:root[data-mode="dark"] {
+  color-scheme: dark;
+
+  --app-bg: #0f172a;
+  --surface: #172033;
+  --surface-secondary: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #a7b3c5;
+  --border-color: #334155;
+  --input-bg: #111c2f;
+  --input-text: #f1f5f9;
+  --input-placeholder: #94a3b8;
+  --hover-bg: #263449;
+  --shadow-color: rgb(0 0 0 / 20%);
+}
+
+/* Main application */
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--app-bg);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+input,
+select,
+textarea {
+  background: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--border-color);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder);
+  opacity: 1;
+}
+
+button {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* Common surfaces */
+.meetings-page,
+.tasks-page,
+.workspace-page,
+.analytics-page,
+.dashboard-page {
+  color: var(--text-primary);
+}
+
+.meeting-summary-card,
+.meeting-detail-card,
+.task-summary-card,
+.task-card,
+.workspace-section,
+.workspace-project-card,
+.workspace-board-column,
+.workspace-board-card,
+.workspace-note-card,
+.analytics-panel,
+.analytics-insight-card {
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 18px var(--shadow-color);
+}
+
+/* Headings and descriptions */
+.meetings-page h1,
+.meetings-page h2,
+.meetings-page h3,
+.tasks-page h1,
+.tasks-page h2,
+.tasks-page h3,
+.workspace-page h1,
+.workspace-page h2,
+.workspace-page h3,
+.analytics-page h1,
+.analytics-page h2,
+.analytics-page h3 {
+  color: var(--text-primary);
+}
+
+.meetings-page p,
+.tasks-page p,
+.workspace-page p,
+.analytics-page p,
+.meetings-page small,
+.tasks-page small,
+.workspace-page small,
+.analytics-page small {
+  color: var(--text-secondary);
+}
+
+/* Search fields */
+.meetings-search input,
+.tasks-search input,
+.workspace-search input,
+.topbar-search,
+.meeting-search {
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--border-color);
+}
+
+.meetings-search,
+.tasks-search,
+.workspace-search {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+table {
+  color: var(--text-primary);
+}
+
+th,
+td {
+  border-color: var(--border-color);
+}
+
+thead {
+  background: var(--surface-secondary);
+}
+
+.meeting-detail-card:hover,
+.workspace-project-card:hover,
+.workspace-board-card:hover,
+.analytics-panel:hover {
+  border-color: var(--primary-color);
+}
+
+.meeting-primary-btn,
+.task-primary-btn,
+.workspace-primary-btn {
+  background: var(--primary-color);
+  color: #ffffff;
+}
+
+.meeting-primary-btn:hover,
+.task-primary-btn:hover,
+.workspace-primary-btn:hover {
+  background: var(--primary-hover);
+}

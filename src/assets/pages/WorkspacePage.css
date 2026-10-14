@@ -618,6 +618,7 @@
 
   .workspace-overview-card {
     padding: 15px;
+    color: var(--text-primary, #202034);
   }
 
   .workspace-tabs {
@@ -641,4 +642,224 @@
   .workspace-form {
     padding: 20px;
   }
+}
+
+
+/* ===== Workspace: Complete Dark Mode Fix ===== */
+
+:root[data-theme="dark"] .workspace-page,
+:root[data-mode="dark"] .workspace-page {
+  color: var(--text-primary, #f1f5f9);
+}
+
+/* Overview cards and content panels */
+:root[data-theme="dark"] .workspace-page .workspace-overview-card,
+:root[data-theme="dark"] .workspace-page .workspace-section,
+:root[data-theme="dark"] .workspace-page .workspace-project-card,
+:root[data-theme="dark"] .workspace-page .workspace-board-column,
+:root[data-theme="dark"] .workspace-page .workspace-board-card,
+:root[data-theme="dark"] .workspace-page .workspace-note-card,
+:root[data-theme="dark"] .workspace-page .workspace-member-card,
+:root[data-mode="dark"] .workspace-page .workspace-overview-card,
+:root[data-mode="dark"] .workspace-page .workspace-section,
+:root[data-mode="dark"] .workspace-page .workspace-project-card,
+:root[data-mode="dark"] .workspace-page .workspace-board-column,
+:root[data-mode="dark"] .workspace-page .workspace-board-card,
+:root[data-mode="dark"] .workspace-page .workspace-note-card,
+:root[data-mode="dark"] .workspace-page .workspace-member-card {
+  background: var(--surface, #172033);
+  color: var(--text-primary, #f1f5f9);
+  border-color: var(--border-color, #334155);
+}
+
+/* Headings */
+:root[data-theme="dark"] .workspace-page h2,
+:root[data-theme="dark"] .workspace-page h3,
+:root[data-theme="dark"] .workspace-page h4,
+:root[data-mode="dark"] .workspace-page h2,
+:root[data-mode="dark"] .workspace-page h3,
+:root[data-mode="dark"] .workspace-page h4 {
+  color: var(--text-primary, #f1f5f9);
+}
+
+/* Supporting text */
+:root[data-theme="dark"] .workspace-page p,
+:root[data-theme="dark"] .workspace-page small,
+:root[data-theme="dark"] .workspace-page .workspace-section-heading,
+:root[data-mode="dark"] .workspace-page p,
+:root[data-mode="dark"] .workspace-page small,
+:root[data-mode="dark"] .workspace-page .workspace-section-heading {
+  color: var(--text-secondary, #a7b3c5);
+}
+
+/* Navigation tabs */
+:root[data-theme="dark"] .workspace-page .workspace-tabs,
+:root[data-mode="dark"] .workspace-page .workspace-tabs {
+  background: var(--surface, #172033);
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-tabs button,
+:root[data-mode="dark"] .workspace-page .workspace-tabs button {
+  background: transparent;
+  color: var(--text-secondary, #a7b3c5);
+  border-color: transparent;
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-tabs button.active,
+:root[data-mode="dark"] .workspace-page .workspace-tabs button.active {
+  background: var(--primary-color, #6755e8);
+  color: #ffffff;
+}
+
+/* Search field */
+:root[data-theme="dark"] .workspace-page .workspace-search,
+:root[data-mode="dark"] .workspace-page .workspace-search {
+  background: var(--input-bg, #111c2f);
+  color: var(--text-secondary, #a7b3c5);
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-search input,
+:root[data-mode="dark"] .workspace-page .workspace-search input {
+  background: transparent;
+  color: var(--input-text, #f1f5f9);
+}
+
+:root[data-theme="dark"] .workspace-page input::placeholder,
+:root[data-theme="dark"] .workspace-page textarea::placeholder,
+:root[data-mode="dark"] .workspace-page input::placeholder,
+:root[data-mode="dark"] .workspace-page textarea::placeholder {
+  color: var(--input-placeholder, #94a3b8);
+}
+
+/* Project progress */
+:root[data-theme="dark"] .workspace-page .workspace-progress-track,
+:root[data-mode="dark"] .workspace-page .workspace-progress-track {
+  background: var(--hover-bg, #263449);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-progress-label,
+:root[data-mode="dark"] .workspace-page .workspace-progress-label {
+  color: var(--text-secondary, #a7b3c5);
+}
+
+/* Task board */
+:root[data-theme="dark"] .workspace-page .workspace-task-count,
+:root[data-mode="dark"] .workspace-page .workspace-task-count {
+  background: var(--hover-bg, #263449);
+  color: var(--text-primary, #f1f5f9);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-column-empty,
+:root[data-mode="dark"] .workspace-page .workspace-column-empty {
+  color: var(--text-secondary, #a7b3c5);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-board-card select,
+:root[data-mode="dark"] .workspace-page .workspace-board-card select {
+  background: var(--input-bg, #111c2f);
+  color: var(--text-primary, #f1f5f9);
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-priority,
+:root[data-mode="dark"] .workspace-page .workspace-priority {
+  background: var(--surface-secondary, #1e293b);
+}
+
+/* Notes and team */
+:root[data-theme="dark"] .workspace-page .workspace-note-footer,
+:root[data-mode="dark"] .workspace-page .workspace-note-footer {
+  color: var(--text-secondary, #a7b3c5);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-member-label,
+:root[data-mode="dark"] .workspace-page .workspace-member-label {
+  background: var(--hover-bg, #263449);
+  color: var(--text-primary, #e2e8f0);
+}
+
+/* Modal forms */
+:root[data-theme="dark"] .workspace-page .workspace-modal-backdrop,
+:root[data-mode="dark"] .workspace-page .workspace-modal-backdrop {
+  background: rgb(0 0 0 / 68%);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-form,
+:root[data-mode="dark"] .workspace-page .workspace-form {
+  background: var(--surface, #172033);
+  color: var(--text-primary, #f1f5f9);
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-form label,
+:root[data-mode="dark"] .workspace-page .workspace-form label {
+  color: var(--text-primary, #f1f5f9);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-form input,
+:root[data-theme="dark"] .workspace-page .workspace-form textarea,
+:root[data-theme="dark"] .workspace-page .workspace-form select,
+:root[data-mode="dark"] .workspace-page .workspace-form input,
+:root[data-mode="dark"] .workspace-page .workspace-form textarea,
+:root[data-mode="dark"] .workspace-page .workspace-form select {
+  background: var(--input-bg, #111c2f);
+  color: var(--input-text, #f1f5f9);
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-close-btn,
+:root[data-mode="dark"] .workspace-page .workspace-close-btn {
+  background: var(--surface-secondary, #1e293b);
+  color: var(--text-primary, #f1f5f9);
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-demo-note,
+:root[data-mode="dark"] .workspace-page .workspace-demo-note {
+  color: var(--text-secondary, #a7b3c5);
+}
+
+/* Buttons */
+:root[data-theme="dark"] .workspace-page .workspace-primary-btn,
+:root[data-mode="dark"] .workspace-page .workspace-primary-btn {
+  background: var(--primary-color, #6755e8);
+  color: #ffffff;
+  border-color: var(--primary-color, #6755e8);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-secondary-btn,
+:root[data-mode="dark"] .workspace-page .workspace-secondary-btn {
+  background: var(--surface-secondary, #1e293b);
+  color: var(--text-primary, #f1f5f9);
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-more-btn,
+:root[data-mode="dark"] .workspace-page .workspace-more-btn {
+  color: var(--text-secondary, #a7b3c5);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-more-btn:hover,
+:root[data-mode="dark"] .workspace-page .workspace-more-btn:hover {
+  background: var(--hover-bg, #263449);
+  color: var(--text-primary, #f1f5f9);
+}
+
+/* Empty states */
+:root[data-theme="dark"] .workspace-page .workspace-empty {
+  background: var(--surface-secondary, #1e293b);
+  color: var(--text-secondary, #a7b3c5);
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-empty h3,
+:root[data-mode="dark"] .workspace-page .workspace-empty h3 {
+  color: var(--text-primary, #f1f5f9);
+}
+
+:root[data-theme="dark"] .workspace-page .workspace-empty p,
+:root[data-mode="dark"] .workspace-page .workspace-empty p {
+  color: var(--text-secondary, #a7b3c5);
 }
