@@ -336,9 +336,9 @@ export default function WorkspacePage() {
               <p>Create and manage your projects.</p>
             </div>
 
-            <label className="workspace-search">
-              <Search size={17} />
+            <label>
               <input
+               className="workspace-search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search projects..."

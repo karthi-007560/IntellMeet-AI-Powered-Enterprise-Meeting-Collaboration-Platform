@@ -249,6 +249,12 @@
   gap: 9px;
 }
 
+.meeting-actions{
+  display:flex;
+  gap:10px;
+}
+
+
 .meeting-detail-footer {
   display: flex;
   align-items: center;

@@ -83,3 +83,43 @@
   color: #98a2b3;
   font-size: 11px;
 }
+
+/* =========================================
+   DASHBOARD STAT CARDS - DARK MODE FIX
+   ========================================= */
+
+:root[data-theme="dark"] .dashboard-page .stat-card,
+:root[data-mode="dark"] .dashboard-page .stat-card {
+  background: var(--surface, #172033);
+  border-color: var(--border-color, #334155);
+}
+
+/* Card title */
+:root[data-theme="dark"] .dashboard-page .stat-card-title,
+:root[data-mode="dark"] .dashboard-page .stat-card-title {
+  color: #cbd5e1 !important;
+}
+
+/* Main number */
+:root[data-theme="dark"] .dashboard-page .stat-card-value,
+:root[data-mode="dark"] .dashboard-page .stat-card-value {
+  color: #f8fafc !important;
+}
+
+/* Description */
+:root[data-theme="dark"] .dashboard-page .stat-card-description,
+:root[data-mode="dark"] .dashboard-page .stat-card-description {
+  color: #a7b3c5 !important;
+}
+
+/* Card footer status */
+:root[data-theme="dark"] .dashboard-page .stat-card-change,
+:root[data-mode="dark"] .dashboard-page .stat-card-change {
+  color: #34d399 !important;
+}
+
+/* Hover effect */
+:root[data-theme="dark"] .dashboard-page .stat-card:hover,
+:root[data-mode="dark"] .dashboard-page .stat-card:hover {
+  box-shadow: 0 10px 25px rgb(0 0 0 / 20%);
+}

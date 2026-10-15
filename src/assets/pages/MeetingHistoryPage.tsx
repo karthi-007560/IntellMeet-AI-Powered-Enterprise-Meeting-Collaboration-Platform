@@ -1,577 +1,573 @@
-
 import { useEffect, useMemo, useState } from "react";
 import {
+  Video,
+  CheckCircle2,
+  Users,
   Search,
   CalendarDays,
   Clock3,
-  Users,
-  Video,
-  FileText,
-  Download,
   ChevronRight,
-  CircleCheck,
+  Download,
+  History,
   X,
 } from "lucide-react";
-import SectionHeading from "../components/SectionHeading";
+import jsPDF from "jspdf";
 import "./MeetingHistoryPage.css";
 
-type Meeting = {
-  id: string | number;
-  title: string;
-  date?: string;
-  time?: string;
-  duration?: number | string;
-  participants?: string[] | number;
-  attendees?: string[] | number;
-  host?: string;
-  status?: string;
-  summary?: string;
-  notes?: string;
-};
+type MeetingStatus = "Completed" | "Upcoming" | "Cancelled";
 
 type MeetingRecord = {
   id: string;
   title: string;
+  host: string;
   date: string;
   time: string;
-  duration: string;
+  duration: number;
   participants: number;
-  host: string;
-  status: "Completed" | "Cancelled" | "Upcoming" | "In Progress";
-  hasSummary: boolean;
+  status: MeetingStatus;
+  summary?: string;
 };
 
-const STORAGE_KEY = "intellmeet_meetings";
+const STORAGE_KEYS = [
+  "intellmeet_meetings",
+  "intellmeet_saved_meetings",
+  "savedMeetings",
+  "meetings",
+];
 
-function readMeetings(): Meeting[] {
+function readMeetings(): MeetingRecord[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
+    let saved: unknown[] = [];
 
-    const parsed: unknown = JSON.parse(stored);
-    return Array.isArray(parsed) ? (parsed as Meeting[]) : [];
-  } catch {
+    for (const key of STORAGE_KEYS) {
+      const raw = localStorage.getItem(key);
+
+      if (!raw) continue;
+
+      const parsed = JSON.parse(raw);
+      const records = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray(parsed?.meetings)
+          ? parsed.meetings
+          : Array.isArray(parsed?.data)
+            ? parsed.data
+            : [];
+
+      if (records.length > 0) {
+        saved = records;
+        break;
+      }
+    }
+
+    return saved.map((item: any, index) => {
+      const rawStatus = String(
+        item.status || item.meetingStatus || ""
+      ).toLowerCase();
+
+      const status: MeetingStatus =
+        rawStatus.includes("cancel")
+          ? "Cancelled"
+          : rawStatus.includes("complete") ||
+              rawStatus.includes("ended") ||
+              rawStatus.includes("finished")
+            ? "Completed"
+            : "Upcoming";
+
+      const dateValue =
+        item.date || item.meetingDate || item.startTime || item.createdAt;
+
+      const date = dateValue ? new Date(dateValue) : new Date();
+
+      return {
+        id: String(item.id || item._id || index + 1),
+        title: String(
+          item.title || item.name || item.meetingName || "Untitled meeting"
+        ),
+        host: String(
+          item.hostName || item.host || item.organizer || "Not specified"
+        ),
+        date: Number.isNaN(date.getTime())
+          ? new Date().toISOString()
+          : date.toISOString(),
+        time: String(item.time || ""),
+        duration: Math.max(
+          0,
+          Number(item.durationMinutes ?? item.duration ?? 15) || 0
+        ),
+        participants: Math.max(
+          0,
+          Number(
+            item.participantCount ??
+              item.participantsCount ??
+              (Array.isArray(item.participants)
+                ? item.participants.length
+                : item.participants) ??
+              1
+          ) || 0
+        ),
+        status,
+        summary: item.summary || item.description || "",
+      };
+    });
+  } catch (error) {
+    console.error("Could not load meeting history:", error);
     return [];
   }
 }
 
 function formatDate(value: string) {
-  if (!value) return "Date not set";
+  const date = new Date(value);
 
-  const date = new Date(
-    /^\d{4}-\d{2}-\d{2}$/.test(value)
-      ? `${value}T12:00:00`
-      : value
-  );
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
 
-  if (Number.isNaN(date.getTime())) return value;
-
-  return date.toLocaleDateString("en-IN", {
+  return date.toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
   });
 }
 
-function getParticipantCount(meeting: Meeting): number {
-  const people = meeting.participants ?? meeting.attendees;
+function formatTime(meeting: MeetingRecord) {
+  if (meeting.time) return meeting.time;
 
-  if (Array.isArray(people)) return people.length;
+  const date = new Date(meeting.date);
 
-  if (typeof people === "number") return people;
+  if (Number.isNaN(date.getTime())) return "--:--";
 
-  return 0;
+  return date.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
-function getStatus(
-  status?: string
-): MeetingRecord["status"] {
-  const normalized = (status ?? "").toLowerCase();
+function downloadMeeting(meeting: MeetingRecord) {
+  const pdf = new jsPDF();
 
-  if (normalized.includes("cancel")) return "Cancelled";
-  if (normalized.includes("progress")) return "In Progress";
-  if (normalized.includes("upcoming") || normalized === "scheduled") {
-    return "Upcoming";
-  }
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const margin = 20;
+  const contentWidth = pageWidth - margin * 2;
+  let y = 25;
 
-  if (
-    normalized.includes("complete") ||
-    normalized === "done" ||
-    normalized === "ended"
-  ) {
-    return "Completed";
-  }
+  // Header
+  pdf.setFillColor(79, 70, 229);
+  pdf.rect(0, 0, pageWidth, 42, "F");
 
-  return "Upcoming";
-}
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(19);
+  pdf.text("IntellMeet", margin, 18);
 
-function toMeetingRecord(meeting: Meeting): MeetingRecord {
-  const durationValue = Number(meeting.duration);
+  pdf.setFontSize(11);
+  pdf.setFont("helvetica", "normal");
+  pdf.text("Meeting History Report", margin, 29);
 
-  return {
-    id: String(meeting.id),
-    title: meeting.title || "Untitled meeting",
-    date: meeting.date ?? "",
-    time: meeting.time ?? "Time not set",
-    duration:
-      Number.isFinite(durationValue) && durationValue > 0
-        ? `${durationValue} min`
-        : typeof meeting.duration === "string" && meeting.duration
-          ? meeting.duration
-          : "—",
-    participants: getParticipantCount(meeting),
-    host: meeting.host || "Not specified",
-    status: getStatus(meeting.status),
-    hasSummary: Boolean(meeting.summary?.trim() || meeting.notes?.trim()),
-  };
-}
+  // Meeting title
+  y = 57;
+  pdf.setTextColor(35, 42, 58);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(16);
 
-function downloadMeetingReport(
-  meeting: MeetingRecord,
-  rawMeeting?: Meeting
-) {
-  const report = [
-    "INTELLMEET - MEETING REPORT",
-    "---------------------------",
-    `Meeting: ${meeting.title}`,
-    `Date: ${formatDate(meeting.date)}`,
-    `Time: ${meeting.time}`,
-    `Duration: ${meeting.duration}`,
-    `Host: ${meeting.host}`,
-    `Participants: ${meeting.participants}`,
-    `Status: ${meeting.status}`,
-    "",
-    "MEETING SUMMARY / NOTES",
-    rawMeeting?.summary?.trim() ||
-      rawMeeting?.notes?.trim() ||
-      "No summary or notes saved for this meeting.",
-  ].join("\n");
+  const titleLines = pdf.splitTextToSize(
+    meeting.title,
+    contentWidth
+  );
 
-  const blob = new Blob([report], {
-    type: "text/plain;charset=utf-8",
+  pdf.text(titleLines, margin, y);
+  y += titleLines.length * 8 + 8;
+
+  // Details
+  const details: [string, string][] = [
+    ["Host", meeting.host || "Not specified"],
+    ["Date", formatDate(meeting.date)],
+    ["Time", formatTime(meeting)],
+    ["Duration", `${meeting.duration} minutes`],
+    ["Participants", String(meeting.participants)],
+    ["Status", meeting.status],
+    ["Summary", meeting.summary || "No summary available."],
+  ];
+
+  details.forEach(([label, value]) => {
+    const valueLines = pdf.splitTextToSize(
+      String(value),
+      contentWidth - 45
+    );
+
+    const rowHeight = Math.max(13, valueLines.length * 6 + 7);
+
+    // Keep each row on the next page if necessary
+    if (y + rowHeight > 270) {
+      pdf.addPage();
+      y = 22;
+    }
+
+    pdf.setDrawColor(225, 229, 239);
+    pdf.setFillColor(248, 249, 253);
+    pdf.roundedRect(
+      margin,
+      y - 5,
+      contentWidth,
+      rowHeight,
+      2,
+      2,
+      "FD"
+    );
+
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+    pdf.setTextColor(90, 99, 120);
+    pdf.text(label, margin + 4, y + 3);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(35, 42, 58);
+    pdf.text(valueLines, margin + 45, y + 3);
+
+    y += rowHeight + 3;
   });
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
+  // Footer
+  const pageCount = pdf.getNumberOfPages();
 
-  link.href = url;
-  link.download = `meeting-${meeting.id}-report.txt`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+  for (let page = 1; page <= pageCount; page++) {
+    pdf.setPage(page);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(130, 138, 153);
 
-  URL.revokeObjectURL(url);
+    pdf.text(
+      `IntellMeet | Meeting Report | Page ${page} of ${pageCount}`,
+      margin,
+      287
+    );
+  }
+
+  // Download PDF
+  const safeName = meeting.title
+    .replace(/[^a-z0-9-_]/gi, "_")
+    .slice(0, 60);
+
+  pdf.save(`${safeName || "meeting"}_report.pdf`);
 }
 
 export default function MeetingHistoryPage() {
   const [meetings, setMeetings] = useState<MeetingRecord[]>([]);
-  const [rawMeetings, setRawMeetings] = useState<Meeting[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [dateFilter, setDateFilter] = useState("All time");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedMeeting, setSelectedMeeting] =
     useState<MeetingRecord | null>(null);
 
   useEffect(() => {
-    const loadMeetings = () => {
-      const saved = readMeetings();
+    const refresh = () => setMeetings(readMeetings());
 
-      setRawMeetings(saved);
-      setMeetings(saved.map(toMeetingRecord));
-    };
+    refresh();
 
-    loadMeetings();
-
-    window.addEventListener("storage", loadMeetings);
-    window.addEventListener("intellmeet_meetings_updated", loadMeetings);
+    window.addEventListener("storage", refresh);
+    window.addEventListener("intellmeet_meetings_updated", refresh);
 
     return () => {
-      window.removeEventListener("storage", loadMeetings);
-      window.removeEventListener(
-        "intellmeet_meetings_updated",
-        loadMeetings
-      );
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("intellmeet_meetings_updated", refresh);
     };
   }, []);
 
   const filteredMeetings = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
     const now = new Date();
 
     return meetings.filter((meeting) => {
+      const query = search.trim().toLowerCase();
+
       const matchesSearch =
-        meeting.title.toLowerCase().includes(normalizedSearch) ||
-        meeting.host.toLowerCase().includes(normalizedSearch);
+        !query ||
+        meeting.title.toLowerCase().includes(query) ||
+        meeting.host.toLowerCase().includes(query);
 
-      const matchesStatus =
-        statusFilter === "All" || meeting.status === statusFilter;
+      const meetingDate = new Date(meeting.date);
 
-      const meetingDate = meeting.date
-        ? new Date(
-            /^\d{4}-\d{2}-\d{2}$/.test(meeting.date)
-              ? `${meeting.date}T12:00:00`
-              : meeting.date
-          )
-        : null;
+      let matchesDate = true;
 
-      let matchesDate = dateFilter === "All time";
-
-      if (
-        dateFilter !== "All time" &&
-        meetingDate &&
-        !Number.isNaN(meetingDate.getTime())
-      ) {
-        const startOfToday = new Date(now);
-        startOfToday.setHours(0, 0, 0, 0);
-
-        const startOfMeetingDay = new Date(meetingDate);
-        startOfMeetingDay.setHours(0, 0, 0, 0);
-
-        const daysAgo =
-          (startOfToday.getTime() - startOfMeetingDay.getTime()) /
-          (1000 * 60 * 60 * 24);
-
+      if (dateFilter === "today") {
+        matchesDate = meetingDate.toDateString() === now.toDateString();
+      } else if (dateFilter === "week") {
+        const weekAgo = new Date(now);
+        weekAgo.setDate(now.getDate() - 7);
+        matchesDate = meetingDate >= weekAgo && meetingDate <= now;
+      } else if (dateFilter === "month") {
         matchesDate =
-          dateFilter === "Last 7 days"
-            ? daysAgo >= 0 && daysAgo < 7
-            : daysAgo >= 0 && daysAgo < 30;
+          meetingDate.getMonth() === now.getMonth() &&
+          meetingDate.getFullYear() === now.getFullYear();
       }
 
-      return matchesSearch && matchesStatus && matchesDate;
+      const matchesStatus =
+        statusFilter === "all" ||
+        meeting.status.toLowerCase() === statusFilter;
+
+      return matchesSearch && matchesDate && matchesStatus;
     });
-  }, [meetings, search, statusFilter, dateFilter]);
+  }, [meetings, search, dateFilter, statusFilter]);
 
   const completedCount = meetings.filter(
     (meeting) => meeting.status === "Completed"
   ).length;
 
-  const totalParticipants = meetings.reduce(
-    (total, meeting) =>
-      meeting.status === "Completed"
-        ? total + meeting.participants
-        : total,
-    0
-  );
-
-  const getRawMeeting = (meetingId: string) =>
-    rawMeetings.find(
-      (meeting) => String(meeting.id) === meetingId
-    );
+  const participantCount = meetings
+    .filter((meeting) => meeting.status === "Completed")
+    .reduce((total, meeting) => total + meeting.participants, 0);
 
   return (
-    <div className="meeting-history-page">
-      <SectionHeading
-        eyebrow="MEETING ARCHIVE"
-        title="Meeting History"
-        subtitle="Review saved meetings, participants, durations, and available summaries."
-      />
+    <section className="meeting-history-page">
+      <div className="meeting-history-heading">
+        <span className="meeting-history-eyebrow">MEETING ARCHIVE</span>
+        <h1>Meeting History</h1>
+        <p>Review saved meetings, participants, durations, and available summaries.</p>
+      </div>
 
-      <div className="history-stats">
-        <article className="history-stat-card">
-          <div className="history-stat-icon purple">
-            <Video size={21} />
-          </div>
-          <div>
-            <p>Total meetings</p>
-            <h3>{meetings.length}</h3>
-            <span>Saved meetings</span>
+      <div className="meeting-history-stats">
+        <article className="meeting-history-stat-card">
+        
+          <div className="meeting-history-stat-copy">
+            <span>Total meetings</span>
+            <strong>{meetings.length}</strong>
+            <small>Saved meetings</small>
           </div>
         </article>
 
-        <article className="history-stat-card">
-          <div className="history-stat-icon green">
-            <CircleCheck size={21} />
-          </div>
-          <div>
-            <p>Completed</p>
-            <h3>{completedCount}</h3>
-            <span>Completed meetings</span>
+        <article className="meeting-history-stat-card">
+         
+          <div className="meeting-history-stat-copy">
+            <span>Completed</span>
+            <strong>{completedCount}</strong>
+            <small>Completed meetings</small>
           </div>
         </article>
 
-        <article className="history-stat-card">
-          <div className="history-stat-icon blue">
-            <Users size={21} />
-          </div>
-          <div>
-            <p>Participant seats</p>
-            <h3>{totalParticipants}</h3>
-            <span>Across completed meetings</span>
+        <article className="meeting-history-stat-card">
+     
+          <div className="meeting-history-stat-copy">
+            <span>Participant seats</span>
+            <strong>{participantCount}</strong>
+            <small>Across completed meetings</small>
           </div>
         </article>
       </div>
 
-      <section className="history-panel">
-        <div className="history-panel-heading">
+      <section className="meeting-history-panel">
+        <div className="meeting-history-panel-header">
           <div>
             <h2>Previous meetings</h2>
             <p>Find and review your saved sessions.</p>
           </div>
-
-          <span className="history-result-count">
+          <span className="meeting-history-result-count">
             {filteredMeetings.length} results
           </span>
         </div>
 
-        <div className="history-filters">
-          <div className="history-search">
-            <Search size={18} />
+        <div className="meeting-history-toolbar">
+          <label >
             <input
-              type="text"
+            className="meeting-history-search"
+              type="search"
               placeholder="Search meeting or host..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
-          </div>
+            {search && (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={() => setSearch("")}
+              >
+                <X size={15} />
+              </button>
+            )}
+          </label>
 
-          <div className="history-select-wrap">
+          <label className="meeting-history-filter">
             <CalendarDays size={16} />
             <select
+              aria-label="Filter by date"
               value={dateFilter}
               onChange={(event) => setDateFilter(event.target.value)}
-              aria-label="Filter by date"
             >
-              <option>All time</option>
-              <option>Last 7 days</option>
-              <option>Last 30 days</option>
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="week">Last 7 days</option>
+              <option value="month">This month</option>
             </select>
-          </div>
+          </label>
 
-          <select
-            className="history-status-select"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            aria-label="Filter by status"
-          >
-            <option value="All">All statuses</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-            <option value="Upcoming">Upcoming</option>
-            <option value="In Progress">In Progress</option>
-          </select>
+          <label className="meeting-history-filter">
+            <select
+              aria-label="Filter by status"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
+            >
+              <option value="all">All statuses</option>
+              <option value="completed">Completed</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </label>
         </div>
 
-        <div className="history-table-wrap">
-          <table className="history-table">
-            <thead>
-              <tr>
-                <th>MEETING</th>
-                <th>DATE & TIME</th>
-                <th>DURATION</th>
-                <th>PARTICIPANTS</th>
-                <th>STATUS</th>
-                <th>ACTIONS</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredMeetings.map((meeting) => (
-                <tr key={meeting.id}>
-                  <td>
-                    <div className="history-meeting-cell">
-                      <div className="history-meeting-icon">
-                        <Video size={18} />
-                      </div>
-                      <div>
-                        <strong>{meeting.title}</strong>
-                        <span>Hosted by {meeting.host}</span>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td>
-                    <div className="history-date-cell">
-                      <strong>{formatDate(meeting.date)}</strong>
-                      <span>{meeting.time}</span>
-                    </div>
-                  </td>
-
-                  <td>
-                    <span className="history-duration">
-                      <Clock3 size={14} />
-                      {meeting.duration}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span className="history-participants">
-                      <Users size={15} />
-                      {meeting.participants}
-                    </span>
-                  </td>
-
-                  <td>
-                    <span
-                      className={`history-status ${
-                        meeting.status === "Completed"
-                          ? "completed"
-                          : meeting.status === "Cancelled"
-                            ? "cancelled"
-                            : ""
-                      }`}
-                    >
-                      {meeting.status === "Completed" ? (
-                        <CircleCheck size={13} />
-                      ) : meeting.status === "Cancelled" ? (
-                        <X size={13} />
-                      ) : (
-                        <Clock3 size={13} />
-                      )}
-                      {meeting.status}
-                    </span>
-                  </td>
-
-                  <td>
-                    <div className="history-actions">
-                      <button
-                        className="history-action-button"
-                        onClick={() => setSelectedMeeting(meeting)}
-                        title="View meeting details"
-                        aria-label={`View ${meeting.title}`}
-                      >
-                        <ChevronRight size={18} />
-                      </button>
-
-                      <button
-                        className="history-action-button"
-                        onClick={() =>
-                          downloadMeetingReport(
-                            meeting,
-                            getRawMeeting(meeting.id)
-                          )
-                        }
-                        title="Download meeting report"
-                        aria-label={`Download ${meeting.title} report`}
-                      >
-                        <Download size={16} />
-                      </button>
-                    </div>
-                  </td>
+        {filteredMeetings.length > 0 ? (
+          <div className="meeting-history-table-wrap">
+            <table className="meeting-history-table">
+              <thead>
+                <tr>
+                  <th>Meeting</th>
+                  <th>Date &amp; Time</th>
+                  <th>Duration</th>
+                  <th>Participants</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredMeetings.map((meeting) => (
+                  <tr key={meeting.id}>
+                    <td>
+                      <div className="meeting-history-name">
+                        <div className="meeting-history-name-icon">
+                          <Video size={19} />
+                        </div>
+                        <div>
+                          <strong>{meeting.title}</strong>
+                          <span>Hosted by {meeting.host}</span>
+                        </div>
+                      </div>
+                    </td>
 
-          {filteredMeetings.length === 0 && (
-            <div className="history-empty">
-              <Search size={30} />
-              <h3>
-                {meetings.length === 0
-                  ? "No meetings saved yet"
-                  : "No meetings found"}
-              </h3>
-              <p>
-                {meetings.length === 0
-                  ? "Create a meeting first. Saved meetings will appear here automatically."
-                  : "Try changing your search or filters."}
-              </p>
+                    <td>
+                      <div className="meeting-history-date">
+                        <strong>{formatDate(meeting.date)}</strong>
+                        <span>{formatTime(meeting)}</span>
+                      </div>
+                    </td>
 
-              {meetings.length > 0 && (
-                <button
-                  onClick={() => {
-                    setSearch("");
-                    setStatusFilter("All");
-                    setDateFilter("All time");
-                  }}
-                >
-                  Reset filters
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+                    <td>
+                      <span className="meeting-history-duration">
+                        <Clock3 size={14} />
+                        {meeting.duration} min
+                      </span>
+                    </td>
 
-        <div className="history-panel-footer">
+                    <td>
+                      <span className="meeting-history-participants">
+                        <Users size={15} />
+                        {meeting.participants}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span
+                        className={`meeting-history-status ${meeting.status.toLowerCase()}`}
+                      >
+                        <Clock3 size={12} />
+                        {meeting.status}
+                      </span>
+                    </td>
+
+                    <td>
+                      <div className="meeting-history-actions">
+                        <button
+                          type="button"
+                          className="meeting-history-action"
+                          title="View meeting details"
+                          aria-label={`View ${meeting.title}`}
+                          onClick={() => setSelectedMeeting(meeting)}
+                        >
+                          <ChevronRight size={18} />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="meeting-history-action"
+                          title="Download meeting details"
+                          aria-label={`Download ${meeting.title}`}
+                          onClick={() => downloadMeeting(meeting)}
+                        >
+                          <Download size={17} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="meeting-history-empty">
+            <History size={30} />
+            <h3>No meetings found</h3>
+            <p>
+              {meetings.length === 0
+                ? "Your saved meetings will appear here."
+                : "Try changing your search or filters."}
+            </p>
+            {(search || dateFilter !== "all" || statusFilter !== "all") && (
+              <button
+                type="button"
+                className="meeting-history-action"
+                onClick={() => {
+                  setSearch("");
+                  setDateFilter("all");
+                  setStatusFilter("all");
+                }}
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
+        )}
+
+        <footer className="meeting-history-footer">
           <span>
             Showing {filteredMeetings.length} of {meetings.length} meetings
           </span>
-          <span>Live local meeting data</span>
-        </div>
+          <span>Meeting data from local storage</span>
+        </footer>
       </section>
 
       {selectedMeeting && (
         <div
-          className="history-modal-backdrop"
+          className="meeting-history-modal-backdrop"
           onClick={() => setSelectedMeeting(null)}
         >
           <section
-            className="history-modal"
+            className="meeting-history-modal"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="history-modal-title"
+            aria-labelledby="meeting-detail-title"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="history-modal-header">
-              <div className="history-modal-icon">
-                <Video size={21} />
+            <div className="meeting-history-modal-header">
+              <div>
+                <span className="meeting-history-eyebrow">MEETING DETAILS</span>
+                <h2 id="meeting-detail-title">{selectedMeeting.title}</h2>
               </div>
-
               <button
-                className="history-modal-close"
+                type="button"
+                className="meeting-history-action"
+                aria-label="Close details"
                 onClick={() => setSelectedMeeting(null)}
-                aria-label="Close meeting details"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            <h2 id="history-modal-title">
-              {selectedMeeting.title}
-            </h2>
-            <p className="history-modal-subtitle">
-              Saved meeting details and available resources
-            </p>
-
-            <div className="history-modal-details">
-              <div>
-                <CalendarDays size={17} />
-                <span>Date</span>
-                <strong>{formatDate(selectedMeeting.date)}</strong>
-              </div>
-              <div>
-                <Clock3 size={17} />
-                <span>Duration</span>
-                <strong>{selectedMeeting.duration}</strong>
-              </div>
-              <div>
-                <Users size={17} />
-                <span>Participants</span>
-                <strong>{selectedMeeting.participants}</strong>
-              </div>
-              <div>
-                <CircleCheck size={17} />
-                <span>Status</span>
-                <strong>{selectedMeeting.status}</strong>
-              </div>
+            <div className="meeting-history-modal-body">
+              <p><strong>Host:</strong> {selectedMeeting.host}</p>
+              <p><strong>Date:</strong> {formatDate(selectedMeeting.date)}</p>
+              <p><strong>Time:</strong> {formatTime(selectedMeeting)}</p>
+              <p><strong>Duration:</strong> {selectedMeeting.duration} minutes</p>
+              <p><strong>Participants:</strong> {selectedMeeting.participants}</p>
+              <p><strong>Status:</strong> {selectedMeeting.status}</p>
+              <p><strong>Summary:</strong> {selectedMeeting.summary || "No summary available."}</p>
             </div>
-
-            <div className="history-summary-notice">
-              <FileText size={19} />
-              <div>
-                <strong>Meeting summary / notes</strong>
-                <p>
-                  {getRawMeeting(selectedMeeting.id)?.summary?.trim() ||
-                  getRawMeeting(selectedMeeting.id)?.notes?.trim() ||
-                  "No summary or notes have been saved for this meeting."}
-                </p>
-              </div>
-            </div>
-
-            <button
-              className="history-modal-download"
-              onClick={() =>
-                downloadMeetingReport(
-                  selectedMeeting,
-                  getRawMeeting(selectedMeeting.id)
-                )
-              }
-            >
-              <Download size={17} />
-              Download meeting report
-            </button>
           </section>
         </div>
       )}
-    </div>
+    </section>
   );
 }

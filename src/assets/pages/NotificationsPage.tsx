@@ -456,11 +456,11 @@ export default function NotificationsPage() {
 
         <div className="notification-overview-actions">
           <button
-            className="notification-button notification-button-primary"
+            className="notification-button-primary"
+            style={{ padding: "10px",borderRadius: "12px"}}
             onClick={markAllAsRead}
             disabled={unreadCount === 0}
           >
-            <CheckCheck size={16} />
             Mark all read
           </button>
         </div>

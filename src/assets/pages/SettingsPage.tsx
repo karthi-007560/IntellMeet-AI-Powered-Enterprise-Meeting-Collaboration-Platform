@@ -231,14 +231,7 @@ export default function SettingsPage() {
           <p>Customize your IntellMeet dashboard</p>
         </div>
 
-        <button
-          type="button"
-          className="settingsSaveButton"
-          onClick={handleSave}
-        >
-          <Save size={17} />
-          Save Changes
-        </button>
+      
       </header>
 
       <section className="settingsPanel">

@@ -520,3 +520,242 @@
     transition: none;
   }
 }
+
+/* =========================================
+   NOTIFICATIONS - DARK MODE
+   ========================================= */
+
+:root[data-theme="dark"] .notifications-page,
+:root[data-mode="dark"] .notifications-page {
+  color: #f1f5f9;
+}
+
+/* Overview card */
+:root[data-theme="dark"] .notification-overview,
+:root[data-mode="dark"] .notification-overview {
+  background: linear-gradient(110deg, #172033 0%, #111827 100%);
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .notification-overview-copy h3,
+:root[data-mode="dark"] .notification-overview-copy h3 {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .notification-overview-copy h3 span,
+:root[data-mode="dark"] .notification-overview-copy h3 span {
+  color: #a5b4fc;
+}
+
+:root[data-theme="dark"] .notification-overview-copy p,
+:root[data-mode="dark"] .notification-overview-copy p {
+  color: #aab6ca;
+}
+
+:root[data-theme="dark"] .notification-overview-icon,
+:root[data-mode="dark"] .notification-overview-icon {
+  color: #a5b4fc;
+  background: #292653;
+}
+
+/* Main notification container */
+:root[data-theme="dark"] .notification-content,
+:root[data-mode="dark"] .notification-content {
+  background: #111827;
+  border-color: #334155;
+}
+
+/* Toolbar */
+:root[data-theme="dark"] .notification-toolbar,
+:root[data-mode="dark"] .notification-toolbar {
+  background: #111827;
+  border-bottom-color: #334155;
+}
+
+:root[data-theme="dark"] .notification-filter,
+:root[data-mode="dark"] .notification-filter {
+  color: #aab6ca;
+}
+
+:root[data-theme="dark"] .notification-filter:hover,
+:root[data-mode="dark"] .notification-filter:hover {
+  color: #c7d2fe;
+  background: #222442;
+}
+
+:root[data-theme="dark"] .notification-filter.active,
+:root[data-mode="dark"] .notification-filter.active {
+  color: #c7d2fe;
+  background: #292653;
+  border-color: #454078;
+}
+
+/* Toolbar buttons */
+:root[data-theme="dark"] .notification-icon-button,
+:root[data-mode="dark"] .notification-icon-button,
+:root[data-theme="dark"] .notification-clear-button,
+:root[data-mode="dark"] .notification-clear-button {
+  color: #cbd5e1;
+  background: #172033;
+  border-color: #3a475c;
+}
+
+:root[data-theme="dark"] .notification-icon-button:hover,
+:root[data-mode="dark"] .notification-icon-button:hover,
+:root[data-theme="dark"] .notification-icon-button.selected,
+:root[data-mode="dark"] .notification-icon-button.selected {
+  color: #c7d2fe;
+  background: #292653;
+  border-color: #5147a8;
+}
+
+:root[data-theme="dark"] .notification-clear-button:hover:not(:disabled),
+:root[data-mode="dark"] .notification-clear-button:hover:not(:disabled) {
+  color: #fda4af;
+  background: #351d2a;
+  border-color: #713443;
+}
+
+/* Group heading and separator */
+:root[data-theme="dark"] .notification-group-heading,
+:root[data-mode="dark"] .notification-group-heading {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .notification-group-line,
+:root[data-mode="dark"] .notification-group-line {
+  background: #334155;
+}
+
+/* Individual notification */
+:root[data-theme="dark"] .notification-item,
+:root[data-mode="dark"] .notification-item {
+  background: transparent;
+  border-color: transparent;
+}
+
+:root[data-theme="dark"] .notification-item.is-unread,
+:root[data-mode="dark"] .notification-item.is-unread {
+  background: #192238;
+  border-color: #293653;
+}
+
+:root[data-theme="dark"] .notification-item:hover,
+:root[data-mode="dark"] .notification-item:hover {
+  background: #202b40;
+  border-color: #3a4760;
+}
+
+:root[data-theme="dark"] .notification-item-title-row h3,
+:root[data-mode="dark"] .notification-item-title-row h3 {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .notification-item-content > p,
+:root[data-mode="dark"] .notification-item-content > p {
+  color: #bdc8d9;
+}
+
+:root[data-theme="dark"] .notification-item-time,
+:root[data-mode="dark"] .notification-item-time {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .notification-unread-dot,
+:root[data-mode="dark"] .notification-unread-dot {
+  background: #a5b4fc;
+}
+
+/* Category icons */
+:root[data-theme="dark"] .type-meeting,
+:root[data-mode="dark"] .type-meeting {
+  color: #c7d2fe;
+  background: #292653;
+}
+
+:root[data-theme="dark"] .type-message,
+:root[data-mode="dark"] .type-message {
+  color: #7dd3fc;
+  background: #153149;
+}
+
+:root[data-theme="dark"] .type-task,
+:root[data-mode="dark"] .type-task {
+  color: #6ee7b7;
+  background: #14372f;
+}
+
+:root[data-theme="dark"] .type-ai,
+:root[data-mode="dark"] .type-ai {
+  color: #fcd34d;
+  background: #3b2d19;
+}
+
+:root[data-theme="dark"] .type-workspace,
+:root[data-mode="dark"] .type-workspace {
+  color: #f0abfc;
+  background: #39213e;
+}
+
+/* Read and delete action buttons */
+:root[data-theme="dark"] .notification-action,
+:root[data-mode="dark"] .notification-action {
+  color: #bdc8d9;
+  background: #172033;
+  border-color: #3a475c;
+}
+
+:root[data-theme="dark"] .notification-action:hover,
+:root[data-mode="dark"] .notification-action:hover {
+  color: #c7d2fe;
+  background: #292653;
+  border-color: #5147a8;
+}
+
+:root[data-theme="dark"] .notification-action.delete:hover,
+:root[data-mode="dark"] .notification-action.delete:hover {
+  color: #fda4af;
+  background: #351d2a;
+  border-color: #713443;
+}
+
+/* Empty state */
+:root[data-theme="dark"] .notification-empty,
+:root[data-mode="dark"] .notification-empty {
+  background: #111827;
+}
+
+:root[data-theme="dark"] .notification-empty-icon,
+:root[data-mode="dark"] .notification-empty-icon {
+  color: #c7d2fe;
+  background: #292653;
+}
+
+:root[data-theme="dark"] .notification-empty h3,
+:root[data-mode="dark"] .notification-empty h3 {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .notification-empty p,
+:root[data-mode="dark"] .notification-empty p {
+  color: #aab6ca;
+}
+
+/* Footer */
+:root[data-theme="dark"] .notification-footer,
+:root[data-mode="dark"] .notification-footer {
+  color: #94a3b8;
+  background: #111827;
+  border-top-color: #334155;
+}
+
+/* Focus accessibility */
+:root[data-theme="dark"] .notification-button:focus-visible,
+:root[data-mode="dark"] .notification-button:focus-visible,
+:root[data-theme="dark"] .notification-filter:focus-visible,
+:root[data-mode="dark"] .notification-filter:focus-visible,
+:root[data-theme="dark"] .notification-action:focus-visible,
+:root[data-mode="dark"] .notification-action:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 3px;
+}

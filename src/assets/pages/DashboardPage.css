@@ -1,23 +1,37 @@
+/* ==========================================
+   INTELLMEET DASHBOARD PAGE
+   Light + Dark Theme Support
+   ========================================== */
 
 .dashboard-page {
   width: 100%;
+  color: var(--text-primary, #182230);
 }
+
+/* ==========================================
+   CREATE MEETING BUTTON
+   ========================================== */
 
 .dashboard-primary-button {
   padding: 12px 17px;
   border: 0;
   border-radius: 10px;
-  background: #6255e7;
-  color: white;
+  background: var(--primary-color, #6255e7);
+  color: #ffffff;
   font-size: 12px;
   font-weight: 700;
-  transition: background 0.2s, transform 0.2s;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .dashboard-primary-button:hover {
   transform: translateY(-2px);
-  background: #4e42cb;
+  background: var(--primary-hover, #4e42cb);
 }
+
+/* ==========================================
+   DASHBOARD STATISTICS
+   ========================================== */
 
 .dashboard-stats {
   display: grid;
@@ -25,6 +39,32 @@
   gap: 16px;
   margin-bottom: 34px;
 }
+
+/* Top cards and their text */
+.dashboard-stats > * {
+  color: var(--text-primary, #e8ebee);
+  background: var(--surface, #ffffff);
+  border-color: var(--border-color, #e4e7ec);
+}
+
+.dashboard-stats h1,
+.dashboard-stats h2,
+.dashboard-stats h3,
+.dashboard-stats h4,
+.dashboard-stats strong,
+.dashboard-stats b {
+  color: var(--text-primary, #e0e3e7);
+}
+
+.dashboard-stats p,
+.dashboard-stats small,
+.dashboard-stats label {
+  color: var(--text-secondary, #e8eefc);
+}
+
+/* ==========================================
+   DASHBOARD SECTIONS
+   ========================================== */
 
 .dashboard-section {
   margin-top: 30px;
@@ -39,14 +79,14 @@
 }
 
 .dashboard-section-heading h2 {
-  color: #182230;
+  color: var(--text-primary, #182230);
   font-size: 17px;
   letter-spacing: -0.3px;
 }
 
 .dashboard-section-heading p {
   margin-top: 7px;
-  color: #98a2b3;
+  color: var(--text-secondary, #98a2b3);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -54,28 +94,42 @@
 .dashboard-text-button {
   border: 0;
   background: transparent;
-  color: #6255e7;
+  color: var(--primary-color, #6255e7);
   font-size: 12px;
   font-weight: 700;
+  cursor: pointer;
 }
+
+/* ==========================================
+   MEETING SEARCH
+   ========================================== */
 
 .meeting-search {
   width: 100%;
   max-width: 320px;
   margin-bottom: 16px;
   padding: 11px 13px;
-  border: 1px solid #e4e7ec;
+  border: 1px solid var(--border-color, #e4e7ec);
   border-radius: 9px;
   outline: none;
-  background: #fff;
-  color: #182230;
+  background: var(--input-bg, #ffffff);
+  color: var(--input-text, #182230);
   font-size: 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.meeting-search::placeholder {
+  color: var(--input-placeholder, #98a2b3);
 }
 
 .meeting-search:focus {
-  border-color: #8b7cf6;
+  border-color: var(--primary-color, #8b7cf6);
   box-shadow: 0 0 0 3px rgb(98 85 231 / 10%);
 }
+
+/* ==========================================
+   MEETING GRID
+   ========================================== */
 
 .dashboard-meeting-grid {
   display: grid;
@@ -85,7 +139,7 @@
 
 .dashboard-no-results {
   padding: 24px;
-  color: #98a2b3;
+  color: var(--text-secondary, #98a2b3);
   font-size: 13px;
 }
 
@@ -93,16 +147,120 @@
   max-width: 100%;
 }
 
+/* ==========================================
+   DASHBOARD FOOTER
+   ========================================== */
+
 .dashboard-footer {
   display: flex;
   justify-content: space-between;
   gap: 15px;
   margin-top: 40px;
   padding: 20px 0;
-  border-top: 1px solid #e9edf3;
-  color: #98a2b3;
+  border-top: 1px solid var(--border-color, #e9edf3);
+  color: var(--text-secondary, #98a2b3);
   font-size: 10px;
 }
+
+/* ==========================================
+   DARK THEME
+   ========================================== */
+
+:root[data-theme="dark"] .dashboard-page,
+:root[data-mode="dark"] .dashboard-page {
+  color: #f1f5f9;
+}
+
+/* Fix top statistic cards */
+:root[data-theme="dark"] .dashboard-stats > *,
+:root[data-mode="dark"] .dashboard-stats > * {
+  color: #f1f5f9 !important;
+  background-color: var(--surface, #172033);
+  border-color: var(--border-color, #334155);
+}
+
+/* Main numbers */
+:root[data-theme="dark"] .dashboard-stats strong,
+:root[data-mode="dark"] .dashboard-stats strong,
+:root[data-theme="dark"] .dashboard-stats h1,
+:root[data-mode="dark"] .dashboard-stats h1,
+:root[data-theme="dark"] .dashboard-stats h2,
+:root[data-mode="dark"] .dashboard-stats h2,
+:root[data-theme="dark"] .dashboard-stats h3,
+:root[data-mode="dark"] .dashboard-stats h3,
+:root[data-theme="dark"] .dashboard-stats h4,
+:root[data-mode="dark"] .dashboard-stats h4,
+:root[data-theme="dark"] .dashboard-stats b,
+:root[data-mode="dark"] .dashboard-stats b,.dashboard-stats  {
+  color: #ffffff !important;
+}
+
+/* Card labels and descriptions */
+:root[data-theme="dark"] .dashboard-stats p,
+:root[data-mode="dark"] .dashboard-stats p,
+:root[data-theme="dark"] .dashboard-stats small,
+:root[data-mode="dark"] .dashboard-stats small,
+:root[data-theme="dark"] .dashboard-stats label,
+:root[data-mode="dark"] .dashboard-stats label {
+  color: #cbd5e1 !important;
+}
+
+:root[data-theme="dark"] .dashboard-section-heading h2,
+:root[data-mode="dark"] .dashboard-section-heading h2 {
+  color: #f8fafc;
+}
+
+:root[data-theme="dark"] .dashboard-section-heading p,
+:root[data-mode="dark"] .dashboard-section-heading p {
+  color: #a7b3c5;
+}
+
+/* Search field */
+:root[data-theme="dark"] .meeting-search,
+:root[data-mode="dark"] .meeting-search {
+  background: var(--input-bg, #111c2f);
+  color: #f1f5f9;
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .meeting-search::placeholder,
+:root[data-mode="dark"] .meeting-search::placeholder {
+  color: #94a3b8;
+}
+
+/* Empty state and footer */
+:root[data-theme="dark"] .dashboard-no-results,
+:root[data-mode="dark"] .dashboard-no-results,
+:root[data-theme="dark"] .dashboard-footer,
+:root[data-mode="dark"] .dashboard-footer {
+  color: #a7b3c5;
+}
+
+:root[data-theme="dark"] .dashboard-footer,
+:root[data-mode="dark"] .dashboard-footer {
+  border-color: var(--border-color, #334155);
+}
+
+/* ==========================================
+   SMOOTH THEME TRANSITIONS
+   ========================================== */
+
+.dashboard-page,
+.dashboard-page > *,
+.dashboard-stats > *,
+.dashboard-section-heading h2,
+.dashboard-section-heading p,
+.meeting-search,
+.dashboard-footer {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* ==========================================
+   RESPONSIVE DESIGN
+   ========================================== */
 
 @media (max-width: 1150px) {
   .dashboard-stats {

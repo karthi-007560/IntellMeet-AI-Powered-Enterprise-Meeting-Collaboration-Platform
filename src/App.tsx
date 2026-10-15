@@ -1,4 +1,3 @@
-
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import AppLayout from "../src/assets/components/AppLayout";
@@ -10,6 +9,8 @@ import NotificationsPage from "../src/assets/pages/NotificationsPage";
 import MeetingsPage from "../src/assets/pages/MeetingsPage";
 import TasksPage from "../src/assets/pages/TasksPage";
 import MeetingHistoryPage from "../src/assets/pages/MeetingHistoryPage";
+import TeamPage from "./assets/pages/TeamPage";
+
 function App() {
   return (
     <AppLayout>
@@ -22,6 +23,8 @@ function App() {
 
         <Route path="/workspace" element={<WorkspacePage />} />
 
+        <Route path="/team" element={<TeamPage />} />
+
         <Route path="/analytics" element={<AnalyticsPage />} />
 
         <Route path="/settings" element={<SettingsPage />} />
@@ -32,9 +35,9 @@ function App() {
         />
 
         <Route
-  path="/meeting-history"
-  element={<MeetingHistoryPage />}
-/>
+          path="/meeting-history"
+          element={<MeetingHistoryPage />}
+        />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -171,8 +171,7 @@ export default function DashboardPage() {
           title="Total Meetings"
           value={meetings.length}
           change="Your meetings"
-          description="meetings saved in your workspace"
-  
+          description="meetings saved in your workspace"  
         />
 
         <StatCard

@@ -1,6 +1,20 @@
-
 import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Video,
+  CheckSquare,
+  BriefcaseBusiness,
+  Users,
+  BarChart3,
+  Settings,
+  History,
+  Bell,
+  Search,
+  Menu,
+  X,
+} from "lucide-react";
+
 import "./AppLayout.css";
 
 type AppLayoutProps = {
@@ -16,13 +30,56 @@ type Appearance = {
 const STORAGE_KEY = "intellmeet_appearance";
 
 const navigation = [
-  { label: "Dashboard", path: "/" },
-  { label: "Meetings", path: "/meetings" },
-  { label: "Tasks", path: "/tasks" },
-  { label: "Workspace", path: "/workspace" },
-  { label: "Analytics", path: "/analytics" },
-  { label: "Settings", path: "/settings" },
+  {
+    label: "Dashboard",
+    path: "/",
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Meetings",
+    path: "/meetings",
+    icon: Video,
+  },
+  {
+    label: "Tasks",
+    path: "/tasks",
+    icon: CheckSquare,
+  },
+  {
+    label: "Workspace",
+    path: "/workspace",
+    icon: BriefcaseBusiness,
+  },
+  {
+    label: "Team",
+    path: "/team",
+    icon: Users,
+  },
+  {
+    label: "Analytics",
+    path: "/analytics",
+    icon: BarChart3,
+  },
+  {
+    label: "Meeting History",
+    path: "/meeting-history",
+    icon: History,
+  },
+  {
+    label: "Settings",
+    path: "/settings",
+    icon: Settings,
+  },
 ];
+
+const accentColors: Record<string, string> = {
+  indigo: "#6366f1",
+  blue: "#2563eb",
+  green: "#059669",
+  purple: "#8b5cf6",
+  orange: "#f97316",
+  rose: "#e11d48",
+};
 
 function readSavedAppearance(): Appearance {
   try {
@@ -41,7 +98,11 @@ function readSavedAppearance(): Appearance {
     console.error("Could not restore appearance:", error);
   }
 
-  return { theme: "indigo", mode: "light", style: "modern" };
+  return {
+    theme: "indigo",
+    mode: "light",
+    style: "modern",
+  };
 }
 
 function applySavedAppearance(appearance: Appearance) {
@@ -53,33 +114,23 @@ function applySavedAppearance(appearance: Appearance) {
   root.dataset.style = appearance.style;
   root.style.colorScheme = appearance.mode;
 
-  const colors: Record<string, string> = {
-    indigo: "#6366f1",
-    blue: "#2563eb",
-    green: "#059669",
-    purple: "#8b5cf6",
-    orange: "#f97316",
-    rose: "#e11d48",
-  };
-
-  const accent = colors[appearance.theme] || colors.indigo;
+  const accent =
+    accentColors[appearance.theme] || accentColors.indigo;
 
   root.style.setProperty("--primary-color", accent);
   root.style.setProperty("--primary-hover", accent);
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
+  const location = useLocation();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  const location = useLocation();
-
   useEffect(() => {
-    // Restore the saved theme on startup.
     applySavedAppearance(readSavedAppearance());
 
-    // React to settings only after SettingsPage saves them.
     const handleAppearanceUpdate = (event: Event) => {
       const customEvent = event as CustomEvent<Appearance>;
 
@@ -90,27 +141,45 @@ export default function AppLayout({ children }: AppLayoutProps) {
       }
     };
 
+    const handleStorageUpdate = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) {
+        applySavedAppearance(readSavedAppearance());
+      }
+    };
+
     window.addEventListener(
       "intellmeet_appearance_updated",
       handleAppearanceUpdate
     );
+
+    window.addEventListener("storage", handleStorageUpdate);
 
     return () => {
       window.removeEventListener(
         "intellmeet_appearance_updated",
         handleAppearanceUpdate
       );
+
+      window.removeEventListener("storage", handleStorageUpdate);
     };
   }, []);
 
+  useEffect(() => {
+    setSidebarOpen(false);
+    setSearchText("");
+    setSearchOpen(false);
+  }, [location.pathname]);
+
   const currentPage =
     navigation.find((item) => item.path === location.pathname)?.label ||
-    location.pathname
-      .split("/")
-      .filter(Boolean)
-      .pop()
-      ?.replace(/-/g, " ")
-      .replace(/\b\w/g, (letter) => letter.toUpperCase()) ||
+    (location.pathname === "/notifications"
+      ? "Notifications"
+      : location.pathname
+          .split("/")
+          .filter(Boolean)
+          .pop()
+          ?.replace(/-/g, " ")
+          .replace(/\b\w/g, (letter) => letter.toUpperCase())) ||
     "Dashboard";
 
   const email =
@@ -123,10 +192,28 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const avatarLetter = firstName.charAt(0).toUpperCase();
 
+  const filteredNavigation = navigation.filter((item) =>
+    item.label.toLowerCase().includes(searchText.toLowerCase().trim())
+  );
+
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!searchText.trim()) return;
+
+    const matchedPage = filteredNavigation[0];
+
+    if (matchedPage) {
+      window.history.pushState({}, "", matchedPage.path);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }
+  };
+
   return (
     <div className="app-layout">
       {sidebarOpen && (
         <button
+          type="button"
           className="sidebar-overlay"
           aria-label="Close navigation"
           onClick={() => setSidebarOpen(false)}
@@ -138,32 +225,40 @@ export default function AppLayout({ children }: AppLayoutProps) {
       >
         <div className="app-brand">
           <div className="brand-mark">IM</div>
+
           <div>
             <strong>IntellMeet</strong>
             <span>Smart collaboration</span>
           </div>
+
+         
         </div>
 
         <div className="sidebar-label">WORKSPACE</div>
 
         <nav className="sidebar-nav">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === "/"}
-              className={({ isActive }) =>
-                `sidebar-link ${isActive ? "active" : ""}`
-              }
-              onClick={() => {
-                setSidebarOpen(false);
-                setSearchText("");
-                setSearchOpen(false);
-              }}
-            >
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+          {navigation.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === "/"}
+                className={({ isActive }) =>
+                  `sidebar-link ${isActive ? "active" : ""}`
+                }
+                onClick={() => {
+                  setSidebarOpen(false);
+                  setSearchText("");
+                  setSearchOpen(false);
+                }}
+              >
+                <Icon size={18} strokeWidth={1.8} />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
         </nav>
 
         <div className="sidebar-bottom">
@@ -174,10 +269,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
           <div className="sidebar-user">
             <div className="user-avatar">{avatarLetter}</div>
+
             <div className="user-details">
               <strong>{firstName}</strong>
               <span>{email || "Logged-in user"}</span>
             </div>
+
             <span className="user-menu">···</span>
           </div>
         </div>
@@ -185,23 +282,29 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       <div className="app-main">
         <header className="app-topbar">
-          <button
-            className="menu-toggle"
-            onClick={() => setSidebarOpen((previous) => !previous)}
-            aria-label="Toggle navigation"
-          >
-            ☰
-          </button>
+          <div className="topbar-left">
+            <button
+              type="button"
+              className="menu-toggle"
+              aria-label="Toggle navigation"
+              onClick={() =>
+                setSidebarOpen((previous) => !previous)
+              }
+            >
+              <Menu size={21} />
+            </button>
 
-          <div className="topbar-breadcrumb">
-            <span>Workspace</span>
-            <span className="breadcrumb-divider">/</span>
-            <strong>{currentPage}</strong>
+            <div className="topbar-breadcrumb">
+              <span>Workspace</span>
+              <span className="breadcrumb-divider">/</span>
+              <strong>{currentPage}</strong>
+            </div>
           </div>
 
           <div className="topbar-actions">
-            <label
+            <form
               className={`topbar-search ${searchOpen ? "search-open" : ""}`}
+              onSubmit={handleSearchSubmit}
             >
               <button
                 type="button"
@@ -212,15 +315,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   setSearchText("");
                 }}
               >
-                🔍
+                <Search size={18} />
               </button>
 
               {searchOpen && (
                 <input
                   autoFocus
                   type="search"
-                  aria-label={`Search ${currentPage}`}
-                  placeholder={`Search ${currentPage.toLowerCase()}...`}
+                  aria-label="Search navigation pages"
+                  placeholder="Search pages..."
                   value={searchText}
                   onChange={(event) => setSearchText(event.target.value)}
                   onKeyDown={(event) => {
@@ -231,17 +334,52 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   }}
                 />
               )}
-            </label>
+            </form>
 
-            <button
-              className="notification-button"
+            {searchOpen && searchText.trim() && (
+              <div className="search-results">
+                {filteredNavigation.length > 0 ? (
+                  filteredNavigation.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        className="search-result-item"
+                        onClick={() => {
+                          setSearchOpen(false);
+                          setSearchText("");
+                        }}
+                      >
+                        <Icon size={17} />
+                        <span>{item.label}</span>
+                      </NavLink>
+                    );
+                  })
+                ) : (
+                  <div className="search-no-results">
+                    No matching pages found
+                  </div>
+                )}
+              </div>
+            )}
+
+            <NavLink
+              to="/notifications"
+              className={({ isActive }) =>
+                `notification-button ${isActive ? "active" : ""}`
+              }
               aria-label="Notifications"
-              onClick={() => alert("You're all caught up!")}
+              title="Notifications"
             >
-              🔔<span />
-            </button>
+              🔔
+            </NavLink>
 
-            <div className="topbar-avatar" title={email || firstName}>
+            <div
+              className="topbar-avatar"
+              title={email || firstName}
+            >
               {avatarLetter}
             </div>
           </div>

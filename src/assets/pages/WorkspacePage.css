@@ -84,8 +84,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  padding-bottom: 13px;
-  border-bottom: 1px solid var(--border-color, #e9e9f1);
+  padding:10px;
+  border-radius: 10px;
 }
 
 .workspace-tabs button {
@@ -114,6 +114,9 @@
   flex-direction: column;
   gap: 20px;
   min-width: 0;
+  padding:30px;
+  border-radius: 16px;
+
 }
 
 .workspace-section-heading {
@@ -478,13 +481,14 @@
 }
 
 .workspace-empty {
-  padding: 45px;
+  padding: 40px;
   gap: 12px;
     display: flex;
   flex-direction: column;
   align-items: center;
   color: var(--text-secondary, #85849a);
   text-align: center;
+  border-radius: 15px;
 }
 
 .workspace-empty h3 {

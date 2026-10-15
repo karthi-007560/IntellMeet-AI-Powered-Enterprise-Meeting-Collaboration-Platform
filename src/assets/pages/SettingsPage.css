@@ -710,3 +710,55 @@
 }
 
 
+/* FIX: SETTINGS PAGE LIGHT MODE TEXT VISIBILITY */
+
+:root[data-theme="light"] .settings-page,
+:root[data-mode="light"] .settings-page {
+  color: #182230;
+}
+
+:root[data-theme="light"] .settings-page h1,
+:root[data-mode="light"] .settings-page h1,
+:root[data-theme="light"] .settings-page h2,
+:root[data-mode="light"] .settings-page h2,
+:root[data-theme="light"] .settings-page h3,
+:root[data-mode="light"] .settings-page h3,
+:root[data-theme="light"] .settings-page p,
+:root[data-mode="light"] .settings-page p,
+:root[data-theme="light"] .settings-page label,
+:root[data-mode="light"] .settings-page label,
+:root[data-theme="light"] .settings-page span,
+:root[data-mode="light"] .settings-page span {
+  color: #182230;
+}
+
+:root[data-theme="light"] .settings-page button,
+:root[data-mode="light"] .settings-page button {
+  color: #182230;
+}
+
+:root[data-theme="light"] .settings-page .settings-save-btn {
+  color: #ffffff;
+}
+
+/* Keep dark mode readable */
+:root[data-theme="dark"] .settings-page,
+:root[data-mode="dark"] .settings-page {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .settings-page h1,
+:root[data-mode="dark"] .settings-page h1,
+:root[data-theme="dark"] .settings-page h2,
+:root[data-mode="dark"] .settings-page h2,
+:root[data-theme="dark"] .settings-page h3,
+:root[data-mode="dark"] .settings-page h3,
+:root[data-theme="dark"] .settings-page p,
+:root[data-mode="dark"] .settings-page p,
+:root[data-theme="dark"] .settings-page label,
+:root[data-mode="dark"] .settings-page label,
+:root[data-theme="dark"] .settings-page span,
+:root[data-mode="dark"] .settings-page span {
+  color: #f1f5f9;
+}
+

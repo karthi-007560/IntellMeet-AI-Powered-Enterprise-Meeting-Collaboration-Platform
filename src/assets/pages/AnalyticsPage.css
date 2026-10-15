@@ -20,7 +20,7 @@
   padding: 11px 15px;
   border: 1px solid var(--border-color, #e6e6ef);
   border-radius: 10px;
-  background: var(--card-bg, #fff);
+  background: var(--card-bg, #ffffff);
   color: var(--text-primary, #333348);
   font-size: 12px;
   font-weight: 700;
@@ -432,9 +432,11 @@
 }
 
 .analytics-footnote {
-  margin: 23px 0 0;
+  margin: 20px;
+  padding: 15px;
+  border-radius: 15px;
   color: var(--text-secondary, #85849a);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.6;
 }
 
@@ -524,8 +526,11 @@
 
 .analytics-disclaimer {
   margin: 0;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 15px;
   color: var(--text-secondary, #85849a);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.6;
 }
 
@@ -584,4 +589,116 @@
   .analytics-insight-card {
     padding: 20px;
   }
+}
+
+/* =========================================
+   ANALYTICS PAGE — DARK THEME SUPPORT
+   ========================================= */
+
+:root[data-theme="dark"] .analytics-page,
+:root[data-mode="dark"] .analytics-page {
+  color: var(--text-primary, #f1f5f9);
+}
+
+:root[data-theme="dark"] .analytics-page .analytics-stat-card,
+:root[data-mode="dark"] .analytics-page .analytics-stat-card,
+:root[data-theme="dark"] .analytics-page .analytics-panel,
+:root[data-mode="dark"] .analytics-page .analytics-panel,
+:root[data-theme="dark"] .analytics-page .analytics-insight-card,
+:root[data-mode="dark"] .analytics-page .analytics-insight-card , .analytics-export-btn{
+  background: var(--surface, #172033);
+  color: var(--text-primary, #f1f5f9);
+  border: 1px solid var(--border-color, #334155);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 12%);
+}
+
+:root[data-theme="dark"] .analytics-page h1,
+:root[data-mode="dark"] .analytics-page h1,
+:root[data-theme="dark"] .analytics-page h2,
+:root[data-mode="dark"] .analytics-page h2,
+:root[data-theme="dark"] .analytics-page h3,
+:root[data-mode="dark"] .analytics-page h3,
+:root[data-theme="dark"] .analytics-page strong,
+:root[data-mode="dark"] .analytics-page strong {
+  color: var(--text-primary, #f1f5f9);
+}
+
+:root[data-theme="dark"] .analytics-page p,
+:root[data-mode="dark"] .analytics-page p,
+:root[data-theme="dark"] .analytics-page small,
+:root[data-mode="dark"] .analytics-page small,
+:root[data-theme="dark"] .analytics-page span,
+:root[data-mode="dark"] .analytics-page span,
+:root[data-theme="dark"] .analytics-page .analytics-y-labels,
+:root[data-mode="dark"] .analytics-page .analytics-y-labels {
+  color: var(--text-secondary, #a7b3c5);
+}
+
+:root[data-theme="dark"] .analytics-page .analytics-chart,
+:root[data-mode="dark"] .analytics-page .analytics-chart,
+:root[data-theme="dark"] .analytics-page .analytics-bars-area,
+:root[data-mode="dark"] .analytics-page .analytics-bars-area {
+  background: transparent;
+}
+
+:root[data-theme="dark"] .analytics-page .analytics-grid-lines span,
+:root[data-mode="dark"] .analytics-page .analytics-grid-lines span {
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .analytics-page .analytics-bar-track,
+:root[data-mode="dark"] .analytics-page .analytics-bar-track,
+:root[data-theme="dark"] .analytics-page .analytics-progress-track,
+:root[data-mode="dark"] .analytics-page .analytics-progress-track,
+:root[data-theme="dark"] .analytics-page .analytics-duration-track,
+:root[data-mode="dark"] .analytics-page .analytics-duration-track,
+:root[data-theme="dark"] .analytics-page .analytics-mini-track,
+:root[data-mode="dark"] .analytics-page .analytics-mini-track {
+  background: var(--hover-bg, #263449);
+}
+
+:root[data-theme="dark"] .analytics-page .analytics-bar,
+:root[data-mode="dark"] .analytics-page .analytics-bar {
+  background: var(--primary-color, #818cf8);
+}
+
+:root[data-theme="dark"] .analytics-page .analytics-chart-note,
+:root[data-mode="dark"] .analytics-page .analytics-chart-note,
+:root[data-theme="dark"] .analytics-page .analytics-disclaimer,
+:root[data-mode="dark"] .analytics-page .analytics-disclaimer,
+:root[data-theme="dark"] .analytics-page .analytics-footnote,
+:root[data-mode="dark"] .analytics-page .analytics-footnote {
+  color: var(--text-secondary, #a7b3c5);
+  background: var(--surface-secondary, #1e293b);
+  border-color: var(--border-color, #334155);
+}
+
+:root[data-theme="dark"] .analytics-page .analytics-task-label,
+:root[data-mode="dark"] .analytics-page .analytics-task-label,
+:root[data-theme="dark"] .analytics-page .analytics-duration-row,
+:root[data-mode="dark"] .analytics-page .analytics-duration-row {
+  color: var(--text-primary, #f1f5f9);
+}
+
+:root[data-theme="dark"] .analytics-page .analytics-insight-metric,
+:root[data-mode="dark"] .analytics-page .analytics-insight-metric,
+:root[data-theme="dark"] .analytics-page .analytics-task-total,
+:root[data-mode="dark"] .analytics-page .analytics-task-total {
+  color: var(--text-primary, #f1f5f9);
+}
+
+:root[data-theme="dark"] .analytics-page .analytics-panel-heading p,
+:root[data-mode="dark"] .analytics-page .analytics-panel-heading p {
+  color: var(--text-secondary, #a7b3c5);
+}
+
+/* Smooth theme switching */
+.analytics-page .analytics-stat-card,
+.analytics-page .analytics-panel,
+.analytics-page .analytics-insight-card,
+.analytics-page .analytics-chart-note {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
