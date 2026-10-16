@@ -684,3 +684,47 @@
   --input-bg: #ffffff;
   --card-shadow: 0 4px 14px rgb(15 23 42 / 5%);
 }
+
+/* Meeting Modal — Dark Theme Fix */
+html[data-mode="dark"] .meeting-modal,
+html[data-mode="dark"] .meeting-modal-content,
+html[data-mode="dark"] .meeting-form {
+  background: var(--surface, #1e293b) !important;
+  color: var(--text, #f1f5f9) !important;
+  border-color: #334155;
+}
+
+/* Modal headings */
+html[data-mode="dark"] .meeting-modal h1,
+html[data-mode="dark"] .meeting-modal h2,
+html[data-mode="dark"] .meeting-modal h3 {
+  color: var(--text, #f1f5f9) !important;
+}
+
+/* Labels and descriptions */
+html[data-mode="dark"] .meeting-modal label,
+html[data-mode="dark"] .meeting-modal p,
+html[data-mode="dark"] .meeting-modal span {
+  color: var(--text-muted, #cbd5e1);
+}
+
+/* Inputs and dropdowns */
+html[data-mode="dark"] .meeting-modal input,
+html[data-mode="dark"] .meeting-modal select,
+html[data-mode="dark"] .meeting-modal textarea {
+  background: #111827 !important;
+  color: #f8fafc !important;
+  border: 1px solid #475569 !important;
+}
+
+/* Dropdown options */
+html[data-mode="dark"] .meeting-modal select option {
+  background: #111827;
+  color: #f8fafc;
+}
+
+/* Placeholder */
+html[data-mode="dark"] .meeting-modal input::placeholder,
+html[data-mode="dark"] .meeting-modal textarea::placeholder {
+  color: #94a3b8 !important;
+}

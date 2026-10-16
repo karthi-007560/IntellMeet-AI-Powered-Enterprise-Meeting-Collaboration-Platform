@@ -7,10 +7,8 @@ import {
   FileText,
   Plus,
   Search,
-  MoreHorizontal,
   X,
   CheckCircle2,
-  Clock3,
   Trash2,
 } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
@@ -25,12 +23,15 @@ type Project = {
   members: string[];
 };
 
+type TaskStatus = "To Do" | "In Progress" | "Done";
+type TaskPriority = "High" | "Medium" | "Low";
+
 type BoardTask = {
   id: number;
   title: string;
   project: string;
-  priority: "High" | "Medium" | "Low";
-  status: "To Do" | "In Progress" | "Done";
+  priority: TaskPriority;
+  status: TaskStatus;
 };
 
 type WorkspaceNote = {
@@ -54,8 +55,23 @@ function readStorage<T,>(key: string): T[] {
 
     const parsed: unknown = JSON.parse(saved);
     return Array.isArray(parsed) ? (parsed as T[]) : [];
-  } catch {
+  } catch (error) {
+    console.error(`Unable to read ${key}:`, error);
     return [];
+  }
+}
+
+function writeStorage<T,>(key: string, value: T[]): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    window.dispatchEvent(new Event("intellmeet_workspace_updated"));
+    return true;
+  } catch (error) {
+    console.error(`Unable to save ${key}:`, error);
+    window.alert(
+      "Data save ஆகவில்லை. Browser storage available-ஆ இருக்கிறதா check பண்ணவும்."
+    );
+    return false;
   }
 }
 
@@ -102,43 +118,62 @@ export default function WorkspacePage() {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskProject, setTaskProject] = useState("");
   const [taskPriority, setTaskPriority] =
-    useState<BoardTask["priority"]>("Medium");
+    useState<TaskPriority>("Medium");
 
   const [noteTitle, setNoteTitle] = useState("");
   const [noteText, setNoteText] = useState("");
 
   const userName = getUserName();
+  const userInitials =
+    userName
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() || "")
+      .join("") || "CU";
 
   useEffect(() => {
-    const syncData = () => {
+    function syncData() {
       setProjects(readStorage<Project>(PROJECTS_KEY));
       setBoardTasks(readStorage<BoardTask>(BOARD_TASKS_KEY));
       setNotes(readStorage<WorkspaceNote>(NOTES_KEY));
-    };
+    }
 
     window.addEventListener("storage", syncData);
-    return () => window.removeEventListener("storage", syncData);
+    window.addEventListener("intellmeet_workspace_updated", syncData);
+
+    return () => {
+      window.removeEventListener("storage", syncData);
+      window.removeEventListener("intellmeet_workspace_updated", syncData);
+    };
   }, []);
 
-  function persistProjects(updated: Project[]) {
+  function persistProjects(updated: Project[]): boolean {
+    if (!writeStorage(PROJECTS_KEY, updated)) return false;
     setProjects(updated);
-    localStorage.setItem(PROJECTS_KEY, JSON.stringify(updated));
+    return true;
   }
 
-  function persistTasks(updated: BoardTask[]) {
+  function persistTasks(updated: BoardTask[]): boolean {
+    if (!writeStorage(BOARD_TASKS_KEY, updated)) return false;
     setBoardTasks(updated);
-    localStorage.setItem(BOARD_TASKS_KEY, JSON.stringify(updated));
+    return true;
   }
 
-  function persistNotes(updated: WorkspaceNote[]) {
+  function persistNotes(updated: WorkspaceNote[]): boolean {
+    if (!writeStorage(NOTES_KEY, updated)) return false;
     setNotes(updated);
-    localStorage.setItem(NOTES_KEY, JSON.stringify(updated));
+    return true;
   }
 
   const filteredProjects = projects.filter((project) =>
     `${project.name} ${project.description}`
       .toLowerCase()
-      .includes(search.toLowerCase())
+      .includes(search.trim().toLowerCase())
+  );
+
+  const teamMembers = Array.from(
+    new Set(projects.flatMap((project) => project.members))
   );
 
   function addProject(event: FormEvent<HTMLFormElement>) {
@@ -147,7 +182,19 @@ export default function WorkspacePage() {
     const name = projectName.trim();
     const description = projectDescription.trim();
 
-    if (!name || !description) return;
+    if (!name || !description) {
+      window.alert("Project name மற்றும் description enter பண்ணு.");
+      return;
+    }
+
+    const duplicate = projects.some(
+      (project) => project.name.toLowerCase() === name.toLowerCase()
+    );
+
+    if (duplicate) {
+      window.alert("இந்த project name ஏற்கனவே உள்ளது.");
+      return;
+    }
 
     const newProject: Project = {
       id: Date.now(),
@@ -155,10 +202,10 @@ export default function WorkspacePage() {
       description,
       color: "purple",
       progress: 0,
-      members: [userName.slice(0, 2).toUpperCase()],
+      members: [userInitials],
     };
 
-    persistProjects([newProject, ...projects]);
+    if (!persistProjects([newProject, ...projects])) return;
 
     setProjectName("");
     setProjectDescription("");
@@ -172,16 +219,31 @@ export default function WorkspacePage() {
     if (!project) return;
 
     const confirmed = window.confirm(
-      `Delete "${project.name}"? Related board tasks will also be removed.`
+      `"${project.name}" project-ஐ delete செய்ய வேண்டுமா? Related tasks-ம் delete ஆகும்.`
     );
 
     if (!confirmed) return;
 
-    persistProjects(projects.filter((item) => item.id !== projectId));
-
-    persistTasks(
-      boardTasks.filter((task) => task.project !== project.name)
+    const updatedProjects = projects.filter(
+      (item) => item.id !== projectId
     );
+
+    const updatedTasks = boardTasks.filter(
+      (task) => task.project !== project.name
+    );
+
+    if (!persistProjects(updatedProjects)) return;
+    persistTasks(updatedTasks);
+  }
+
+  function updateProgress(projectId: number, progress: number) {
+    const updated = projects.map((project) =>
+      project.id === projectId
+        ? { ...project, progress }
+        : project
+    );
+
+    persistProjects(updated);
   }
 
   function addTask(event: FormEvent<HTMLFormElement>) {
@@ -190,7 +252,10 @@ export default function WorkspacePage() {
     const title = taskTitle.trim();
     const project = taskProject.trim();
 
-    if (!title || !project) return;
+    if (!title || !project) {
+      window.alert("Task title மற்றும் project select பண்ணு.");
+      return;
+    }
 
     const newTask: BoardTask = {
       id: Date.now(),
@@ -200,7 +265,7 @@ export default function WorkspacePage() {
       status: "To Do",
     };
 
-    persistTasks([newTask, ...boardTasks]);
+    if (!persistTasks([newTask, ...boardTasks])) return;
 
     setTaskTitle("");
     setTaskProject("");
@@ -209,16 +274,16 @@ export default function WorkspacePage() {
     setActiveTab("Board");
   }
 
-  function moveTask(taskId: number, status: BoardTask["status"]) {
-    persistTasks(
-      boardTasks.map((task) =>
-        task.id === taskId ? { ...task, status } : task
-      )
+  function moveTask(taskId: number, status: TaskStatus) {
+    const updated = boardTasks.map((task) =>
+      task.id === taskId ? { ...task, status } : task
     );
+
+    persistTasks(updated);
   }
 
   function deleteTask(taskId: number) {
-    if (!window.confirm("Delete this task?")) return;
+    if (!window.confirm("இந்த task-ஐ delete செய்ய வேண்டுமா?")) return;
 
     persistTasks(boardTasks.filter((task) => task.id !== taskId));
   }
@@ -229,7 +294,10 @@ export default function WorkspacePage() {
     const title = noteTitle.trim();
     const text = noteText.trim();
 
-    if (!title || !text) return;
+    if (!title || !text) {
+      window.alert("Note title மற்றும் content enter பண்ணு.");
+      return;
+    }
 
     const newNote: WorkspaceNote = {
       id: Date.now(),
@@ -243,7 +311,7 @@ export default function WorkspacePage() {
       }),
     };
 
-    persistNotes([newNote, ...notes]);
+    if (!persistNotes([newNote, ...notes])) return;
 
     setNoteTitle("");
     setNoteText("");
@@ -252,16 +320,16 @@ export default function WorkspacePage() {
   }
 
   function deleteNote(noteId: number) {
-    if (!window.confirm("Delete this note?")) return;
+    if (!window.confirm("இந்த note-ஐ delete செய்ய வேண்டுமா?")) return;
 
     persistNotes(notes.filter((note) => note.id !== noteId));
   }
 
-  const teamMembers = Array.from(
-    new Set(
-      projects.flatMap((project) => project.members)
-    )
-  );
+  function closeAllForms() {
+    setShowProjectForm(false);
+    setShowTaskForm(false);
+    setShowNoteForm(false);
+  }
 
   return (
     <section className="workspace-page">
@@ -271,6 +339,7 @@ export default function WorkspacePage() {
         subtitle="Manage your projects, tasks, and notes in one place."
         action={
           <button
+            type="button"
             className="workspace-primary-btn"
             onClick={() => setShowProjectForm(true)}
           >
@@ -280,23 +349,21 @@ export default function WorkspacePage() {
         }
       />
 
+      {/* Overview */}
       <div className="workspace-overview">
         <article className="workspace-overview-card">
-         
           <span>Projects</span>
           <strong>{projects.length}</strong>
-          <small>Your projects</small>
+          <small>Your saved projects</small>
         </article>
 
         <article className="workspace-overview-card">
-         
           <span>Team members</span>
           <strong>{teamMembers.length}</strong>
-          <small>Project members</small>
+          <small>Project member initials</small>
         </article>
 
         <article className="workspace-overview-card">
-         
           <span>Active tasks</span>
           <strong>
             {boardTasks.filter((task) => task.status !== "Done").length}
@@ -305,16 +372,17 @@ export default function WorkspacePage() {
         </article>
 
         <article className="workspace-overview-card">
-       
           <span>Shared notes</span>
           <strong>{notes.length}</strong>
-          <small>Your saved notes</small>
+          <small>Saved notes</small>
         </article>
       </div>
 
+      {/* Tabs */}
       <div className="workspace-tabs">
         {(["Projects", "Board", "Notes", "Team"] as const).map((tab) => (
           <button
+            type="button"
             key={tab}
             className={activeTab === tab ? "active" : ""}
             onClick={() => setActiveTab(tab)}
@@ -328,6 +396,7 @@ export default function WorkspacePage() {
         ))}
       </div>
 
+      {/* PROJECTS */}
       {activeTab === "Projects" && (
         <div className="workspace-section">
           <div className="workspace-section-heading">
@@ -336,28 +405,33 @@ export default function WorkspacePage() {
               <p>Create and manage your projects.</p>
             </div>
 
-            <label>
+            <label >
               <input
-               className="workspace-search"
                 value={search}
+                className="workspace-search"  
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search projects..."
+                aria-label="Search projects"
               />
             </label>
           </div>
 
           {filteredProjects.length === 0 ? (
             <div className="workspace-empty">
+
               <h3>
-                {search ? "No projects found" : "No projects yet"}
+                {search.trim() ? "No projects found" : "No projects yet"}
               </h3>
+
               <p>
-                {search
-                  ? "Try another search."
+                {search.trim()
+                  ? "Try another search term."
                   : "Create your first project to get started."}
               </p>
-              {!search && (
+
+              {!search.trim() && (
                 <button
+                  type="button"
                   className="workspace-primary-btn"
                   onClick={() => setShowProjectForm(true)}
                 >
@@ -374,11 +448,14 @@ export default function WorkspacePage() {
                   key={project.id}
                 >
                   <div className="workspace-project-top">
-                    <div className={`workspace-project-icon ${project.color}`}>
+                    <div
+                      className={`workspace-project-icon ${project.color}`}
+                    >
                       <FolderKanban size={22} />
                     </div>
 
                     <button
+                      type="button"
                       className="workspace-more-btn"
                       aria-label={`Delete ${project.name}`}
                       title="Delete project"
@@ -399,12 +476,38 @@ export default function WorkspacePage() {
                     <strong>{project.progress}%</strong>
                   </div>
 
-                  <div className="workspace-progress-track">
+                  <div
+                    className="workspace-progress-track"
+                    role="progressbar"
+                    aria-valuenow={project.progress}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-label={`${project.name} progress`}
+                  >
                     <div
                       className={project.color}
                       style={{ width: `${project.progress}%` }}
                     />
                   </div>
+
+                  <label className="workspace-progress-control">
+                    <span>Update progress</span>
+                    <select
+                      value={project.progress}
+                      onChange={(event) =>
+                        updateProgress(
+                          project.id,
+                          Number(event.target.value)
+                        )
+                      }
+                    >
+                      <option value={0}>0% — Not started</option>
+                      <option value={25}>25% — Started</option>
+                      <option value={50}>50% — In progress</option>
+                      <option value={75}>75% — Nearly done</option>
+                      <option value={100}>100% — Completed</option>
+                    </select>
+                  </label>
 
                   <div className="workspace-project-footer">
                     <div className="workspace-avatar-stack">
@@ -418,7 +521,10 @@ export default function WorkspacePage() {
                       ))}
                     </div>
 
-                    <span>{project.members.length} members</span>
+                    <span>
+                      {project.members.length}{" "}
+                      {project.members.length === 1 ? "member" : "members"}
+                    </span>
                   </div>
                 </article>
               ))}
@@ -427,6 +533,7 @@ export default function WorkspacePage() {
         </div>
       )}
 
+      {/* TASK BOARD */}
       {activeTab === "Board" && (
         <div className="workspace-section">
           <div className="workspace-section-heading">
@@ -436,6 +543,7 @@ export default function WorkspacePage() {
             </div>
 
             <button
+              type="button"
               className="workspace-primary-btn"
               onClick={() => setShowTaskForm(true)}
             >
@@ -477,6 +585,7 @@ export default function WorkspacePage() {
                         </span>
 
                         <button
+                          type="button"
                           className="workspace-more-btn"
                           title="Delete task"
                           aria-label={`Delete ${task.title}`}
@@ -496,7 +605,7 @@ export default function WorkspacePage() {
                           onChange={(event) =>
                             moveTask(
                               task.id,
-                              event.target.value as BoardTask["status"]
+                              event.target.value as TaskStatus
                             )
                           }
                         >
@@ -520,6 +629,7 @@ export default function WorkspacePage() {
         </div>
       )}
 
+      {/* NOTES */}
       {activeTab === "Notes" && (
         <div className="workspace-section">
           <div className="workspace-section-heading">
@@ -529,6 +639,7 @@ export default function WorkspacePage() {
             </div>
 
             <button
+              type="button"
               className="workspace-secondary-btn"
               onClick={() => setShowNoteForm(true)}
             >
@@ -542,7 +653,9 @@ export default function WorkspacePage() {
               <FileText size={32} />
               <h3>No notes yet</h3>
               <p>Create your first note to keep important information.</p>
+
               <button
+                type="button"
                 className="workspace-primary-btn"
                 onClick={() => setShowNoteForm(true)}
               >
@@ -563,6 +676,7 @@ export default function WorkspacePage() {
                     </div>
 
                     <button
+                      type="button"
                       className="workspace-more-btn"
                       title="Delete note"
                       aria-label={`Delete ${note.title}`}
@@ -586,6 +700,7 @@ export default function WorkspacePage() {
         </div>
       )}
 
+      {/* TEAM */}
       {activeTab === "Team" && (
         <div className="workspace-section">
           <div className="workspace-section-heading">
@@ -599,11 +714,7 @@ export default function WorkspacePage() {
             <div className="workspace-empty">
               <Users size={32} />
               <h3>No team members yet</h3>
-              <p>
-                Create a project to start your workspace. Registered team
-                members can be connected when authentication and a backend
-                are integrated.
-              </p>
+              <p>Create a project to start your workspace.</p>
             </div>
           ) : (
             <div className="workspace-team-grid">
@@ -619,10 +730,10 @@ export default function WorkspacePage() {
                   >
                     {member}
                   </div>
-                  <h3>{member === userName.slice(0, 2).toUpperCase()
-                    ? userName
-                    : member}</h3>
+
+                  <h3>{member === userInitials ? userName : member}</h3>
                   <p>Workspace member</p>
+
                   <span className="workspace-member-label">
                     Project member
                   </span>
@@ -633,8 +744,16 @@ export default function WorkspacePage() {
         </div>
       )}
 
+      {/* CREATE PROJECT MODAL */}
       {showProjectForm && (
-        <div className="workspace-modal-backdrop">
+        <div
+          className="workspace-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeAllForms();
+            }
+          }}
+        >
           <form className="workspace-form" onSubmit={addProject}>
             <div className="workspace-form-heading">
               <div>
@@ -645,7 +764,7 @@ export default function WorkspacePage() {
               <button
                 type="button"
                 className="workspace-close-btn"
-                onClick={() => setShowProjectForm(false)}
+                onClick={closeAllForms}
                 aria-label="Close"
               >
                 <X size={20} />
@@ -660,6 +779,7 @@ export default function WorkspacePage() {
               placeholder="e.g. Mobile application"
               maxLength={80}
               required
+              autoFocus
             />
 
             <label htmlFor="workspace-project-description">
@@ -683,14 +803,21 @@ export default function WorkspacePage() {
             </button>
 
             <p className="workspace-demo-note">
-              Saved in this browser.
+              Project data is saved in this browser.
             </p>
           </form>
         </div>
       )}
 
       {showTaskForm && (
-        <div className="workspace-modal-backdrop">
+        <div
+          className="workspace-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeAllForms();
+            }
+          }}
+        >
           <form className="workspace-form" onSubmit={addTask}>
             <div className="workspace-form-heading">
               <div>
@@ -701,7 +828,7 @@ export default function WorkspacePage() {
               <button
                 type="button"
                 className="workspace-close-btn"
-                onClick={() => setShowTaskForm(false)}
+                onClick={closeAllForms}
                 aria-label="Close"
               >
                 <X size={20} />
@@ -731,7 +858,6 @@ export default function WorkspacePage() {
                   {project.name}
                 </option>
               ))}
-              <option value="General">General</option>
             </select>
 
             <label htmlFor="workspace-task-priority">Priority</label>
@@ -739,9 +865,7 @@ export default function WorkspacePage() {
               id="workspace-task-priority"
               value={taskPriority}
               onChange={(event) =>
-                setTaskPriority(
-                  event.target.value as BoardTask["priority"]
-                )
+                setTaskPriority(event.target.value as TaskPriority)
               }
             >
               <option value="High">High</option>
@@ -749,20 +873,34 @@ export default function WorkspacePage() {
               <option value="Low">Low</option>
             </select>
 
-            <button type="submit" className="workspace-primary-btn">
+            <button
+              type="submit"
+              className="workspace-primary-btn"
+              disabled={projects.length === 0}
+            >
               <Plus size={18} />
               Create Task
             </button>
 
-            <p className="workspace-demo-note">
-              Saved in this browser.
-            </p>
+            {projects.length === 0 && (
+              <p className="workspace-demo-note">
+                Task create 
+              </p>
+            )}
           </form>
         </div>
       )}
 
+      {/* CREATE NOTE MODAL */}
       {showNoteForm && (
-        <div className="workspace-modal-backdrop">
+        <div
+          className="workspace-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closeAllForms();
+            }
+          }}
+        >
           <form className="workspace-form" onSubmit={addNote}>
             <div className="workspace-form-heading">
               <div>
@@ -773,7 +911,7 @@ export default function WorkspacePage() {
               <button
                 type="button"
                 className="workspace-close-btn"
-                onClick={() => setShowNoteForm(false)}
+                onClick={closeAllForms}
                 aria-label="Close"
               >
                 <X size={20} />
@@ -807,7 +945,7 @@ export default function WorkspacePage() {
             </button>
 
             <p className="workspace-demo-note">
-              Saved in this browser.
+              Notes are saved in this browser.
             </p>
           </form>
         </div>

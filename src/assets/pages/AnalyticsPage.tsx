@@ -1,14 +1,7 @@
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Activity,
-  CalendarDays,
-  Clock3,
-  Download,
-  TrendingUp,
-  Users,
-  CheckCircle2,
-} from "lucide-react";
+import { CalendarDays, Download } from "lucide-react";
+import { jsPDF } from "jspdf";
 import SectionHeading from "../components/SectionHeading";
 import "./AnalyticsPage.css";
 
@@ -52,10 +45,7 @@ function parseMeetingDate(meeting: Meeting): Date | null {
   if (!meeting.date) return null;
 
   const date = new Date(meeting.date);
-
-  if (Number.isNaN(date.getTime())) return null;
-
-  return date;
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function getDuration(meeting: Meeting): number {
@@ -101,11 +91,29 @@ function getPeriodStart(period: Period): Date {
   return start;
 }
 
+function formatDate(dateValue?: string): string {
+  if (!dateValue) return "Not set";
+
+  const date = new Date(dateValue);
+
+  if (Number.isNaN(date.getTime())) return dateValue;
+
+  return date.toLocaleDateString();
+}
+
+function safePdfText(value: unknown): string {
+  return String(value ?? "")
+    .replace(/[\r\n]+/g, " ")
+    .trim();
+}
+
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState<Period>("7 days");
+
   const [meetings, setMeetings] = useState<Meeting[]>(() =>
     readArray<Meeting>(MEETINGS_KEY)
   );
+
   const [tasks, setTasks] = useState<Task[]>(() =>
     readArray<Task>(TASKS_KEY)
   );
@@ -216,70 +224,7 @@ export default function AnalyticsPage() {
     });
   }, [period, startDate, filteredMeetings]);
 
-  const maxMeetings = Math.max(
-    1,
-    ...chartData.map((item) => item.meetings)
-  );
-
-  const maxHours = Math.max(
-    1,
-    ...chartData.map((item) => item.hours)
-  );
-
-  function exportReport() {
-    const rows: (string | number)[][] = [
-      ["Metric", "Value"],
-      ["Reporting period", period],
-      ["Total meetings", meetingTotal],
-      ["Meeting hours", hourTotal],
-      ["Total tasks", filteredTasks.length],
-      ["Tasks completed", completedTasks],
-      ["Tasks pending", pendingTasks],
-      ["Task completion rate", `${completionRate}%`],
-      ["Unique participants", participantCount],
-      [],
-      ["Date", "Meetings", "Meeting hours"],
-      ...chartData.map((item) => [
-        item.date.toLocaleDateString("en-CA"),
-        item.meetings,
-        item.hours,
-      ]),
-      [],
-      ["Task title", "Status", "Due date"],
-      ...filteredTasks.map((task) => [
-        task.title || "Untitled task",
-        isTaskCompleted(task) ? "Completed" : "Pending",
-        task.dueDate || "",
-      ]),
-    ];
-
-    const csv = rows
-      .map((row) =>
-        row
-          .map((cell) => {
-            const value = String(cell ?? "");
-            return `"${value.replace(/"/g, '""')}"`;
-          })
-          .join(",")
-      )
-      .join("\r\n");
-
-    const blob = new Blob(["\uFEFF" + csv], {
-      type: "text/csv;charset=utf-8;",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.href = url;
-    link.download = `intellmeet-analytics-${period.replace(" ", "-")}.csv`;
-
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
+  const maxMeetings = Math.max(1, ...chartData.map((item) => item.meetings));
 
   const durationGroups = [
     { label: "Under 15 min", color: "purple", count: 0 },
@@ -297,6 +242,257 @@ export default function AnalyticsPage() {
     else durationGroups[3].count += 1;
   });
 
+  // PDF export
+  function exportReport() {
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pageWidth - margin * 2;
+      const bottomMargin = 18;
+      let y = 53;
+
+      function addPageIfNeeded(requiredHeight: number) {
+        if (y + requiredHeight > pageHeight - bottomMargin) {
+          pdf.addPage();
+          y = 20;
+        }
+      }
+
+      function drawSectionTitle(title: string) {
+        addPageIfNeeded(16);
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(13);
+        pdf.setTextColor(45, 50, 65);
+        pdf.text(title, margin, y);
+        y += 9;
+      }
+
+      function drawTableHeader(
+        columns: { title: string; x: number }[]
+      ) {
+        addPageIfNeeded(12);
+        pdf.setFillColor(79, 70, 229);
+        pdf.rect(margin, y - 5, contentWidth, 10, "F");
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(8);
+        pdf.setTextColor(255, 255, 255);
+
+        columns.forEach((column) => {
+          pdf.text(column.title, column.x, y + 1);
+        });
+
+        y += 9;
+      }
+
+      // Report header
+      pdf.setFillColor(79, 70, 229);
+      pdf.rect(0, 0, pageWidth, 39, "F");
+
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(21);
+      pdf.text("IntellMeet", margin, 16);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(11);
+      pdf.text("Analytics Report", margin, 27);
+
+      pdf.setFontSize(9);
+      pdf.text(`Reporting period: ${period}`, pageWidth - margin, 27, {
+        align: "right",
+      });
+
+      // Summary
+      drawSectionTitle("Performance Summary");
+
+      const summaryRows: [string, string][] = [
+        ["Report generated", new Date().toLocaleString()],
+        ["Reporting period", period],
+        ["Total meetings", String(meetingTotal)],
+        ["Meeting hours", `${hourTotal} hours`],
+        ["Total tasks", String(filteredTasks.length)],
+        ["Tasks completed", String(completedTasks)],
+        ["Tasks pending", String(pendingTasks)],
+        ["Task completion rate", `${completionRate}%`],
+        ["Unique participants", String(participantCount)],
+      ];
+
+      summaryRows.forEach(([label, value], index) => {
+        addPageIfNeeded(10);
+
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 249, 253);
+          pdf.rect(margin, y - 5, contentWidth, 9, "F");
+        }
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(9);
+        pdf.setTextColor(85, 93, 112);
+        pdf.text(label, margin + 3, y + 1);
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(35, 42, 58);
+        pdf.text(
+          pdf.splitTextToSize(value, contentWidth - 70),
+          margin + 70,
+          y + 1
+        );
+
+        y += 9;
+      });
+
+      // Daily meeting activity
+      y += 8;
+      drawSectionTitle("Meeting Activity");
+
+      const activityColumns = [
+        { title: "Date", x: margin + 3 },
+        { title: "Meetings", x: margin + 77 },
+        { title: "Hours", x: margin + 127 },
+      ];
+
+      drawTableHeader(activityColumns);
+
+      chartData.forEach((item, index) => {
+        addPageIfNeeded(9);
+
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 249, 253);
+          pdf.rect(margin, y - 5, contentWidth, 8, "F");
+        }
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(8);
+        pdf.setTextColor(45, 50, 65);
+
+        pdf.text(item.date.toLocaleDateString(), margin + 3, y);
+        pdf.text(String(item.meetings), margin + 77, y);
+        pdf.text(String(item.hours), margin + 127, y);
+
+        y += 8;
+      });
+
+      // Task details
+      y += 8;
+      drawSectionTitle("Task Details");
+
+      drawTableHeader([
+        { title: "Task", x: margin + 3 },
+        { title: "Status", x: margin + 105 },
+        { title: "Due date", x: margin + 145 },
+      ]);
+
+      if (filteredTasks.length === 0) {
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text("No tasks recorded for this reporting period.", margin + 3, y);
+        y += 9;
+      } else {
+        filteredTasks.forEach((task, index) => {
+          const title = safePdfText(task.title || "Untitled task");
+          const titleLines = pdf.splitTextToSize(title, 94);
+          const rowHeight = Math.max(9, titleLines.length * 4.5 + 3);
+
+          addPageIfNeeded(rowHeight);
+
+          if (index % 2 === 0) {
+            pdf.setFillColor(248, 249, 253);
+            pdf.rect(margin, y - 5, contentWidth, rowHeight, "F");
+          }
+
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(8);
+          pdf.setTextColor(45, 50, 65);
+
+          pdf.text(titleLines, margin + 3, y);
+          pdf.text(
+            isTaskCompleted(task) ? "Completed" : "Pending",
+            margin + 105,
+            y
+          );
+          pdf.text(formatDate(task.dueDate), margin + 145, y);
+
+          y += rowHeight + 2;
+        });
+      }
+
+      // Meeting details
+      y += 8;
+      drawSectionTitle("Meeting Details");
+
+      drawTableHeader([
+        { title: "Meeting", x: margin + 3 },
+        { title: "Date", x: margin + 93 },
+        { title: "Duration", x: margin + 133 },
+      ]);
+
+      if (filteredMeetings.length === 0) {
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text("No meetings recorded for this reporting period.", margin + 3, y);
+        y += 9;
+      } else {
+        filteredMeetings.forEach((meeting, index) => {
+          const title = safePdfText(meeting.title || "Untitled meeting");
+          const titleLines = pdf.splitTextToSize(title, 83);
+          const rowHeight = Math.max(9, titleLines.length * 4.5 + 3);
+
+          addPageIfNeeded(rowHeight);
+
+          if (index % 2 === 0) {
+            pdf.setFillColor(248, 249, 253);
+            pdf.rect(margin, y - 5, contentWidth, rowHeight, "F");
+          }
+
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(8);
+          pdf.setTextColor(45, 50, 65);
+
+          pdf.text(titleLines, margin + 3, y);
+          pdf.text(formatDate(meeting.date), margin + 93, y);
+          pdf.text(`${getDuration(meeting)} min`, margin + 133, y);
+
+          y += rowHeight + 2;
+        });
+      }
+
+      // Footer and page numbers
+      const totalPages = pdf.getNumberOfPages();
+
+      for (let page = 1; page <= totalPages; page += 1) {
+        pdf.setPage(page);
+
+        pdf.setDrawColor(225, 229, 239);
+        pdf.line(
+          margin,
+          pageHeight - 14,
+          pageWidth - margin,
+          pageHeight - 14
+        );
+
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(8);
+        pdf.setTextColor(130, 138, 153);
+
+        pdf.text(
+          `IntellMeet Analytics | Page ${page} of ${totalPages}`,
+          margin,
+          pageHeight - 8
+        );
+      }
+
+      pdf.save(`intellmeet-analytics-${period.replace(" ", "-")}.pdf`);
+    } catch (error) {
+      console.error("PDF export failed:", error);
+      window.alert("Unable to export the PDF. Please try again.");
+    }
+  }
+
   return (
     <section className="analytics-page">
       <SectionHeading
@@ -304,9 +500,13 @@ export default function AnalyticsPage() {
         title="Analytics"
         subtitle="Review meeting activity and task progress from your saved workspace data."
         action={
-          <button className="analytics-export-btn" onClick={exportReport}>
+          <button
+            type="button"
+            className="analytics-export-btn"
+            onClick={exportReport}
+          >
             <Download size={17} />
-            Export CSV
+            Export PDF
           </button>
         }
       />
@@ -320,6 +520,7 @@ export default function AnalyticsPage() {
         <div className="analytics-period-control">
           {(["7 days", "30 days", "90 days"] as Period[]).map((item) => (
             <button
+              type="button"
               key={item}
               className={period === item ? "active" : ""}
               onClick={() => setPeriod(item)}
@@ -334,10 +535,8 @@ export default function AnalyticsPage() {
         <article className="analytics-stat-card">
           <div className="analytics-stat-top">
             <span>Total meetings</span>
-            
           </div>
           <strong>{meetingTotal}</strong>
-      
         </article>
 
         <article className="analytics-stat-card">
@@ -345,22 +544,18 @@ export default function AnalyticsPage() {
             <span>Meeting hours</span>
           </div>
           <strong>{hourTotal}h</strong>
-        
         </article>
 
         <article className="analytics-stat-card">
           <div className="analytics-stat-top">
             <span>Tasks completed</span>
-          
           </div>
           <strong>{completedTasks}</strong>
-           
         </article>
 
         <article className="analytics-stat-card">
           <div className="analytics-stat-top">
             <span>Participants</span>
-            
           </div>
           <strong>{participantCount}</strong>
           <small>Unique participant names recorded</small>
@@ -374,12 +569,10 @@ export default function AnalyticsPage() {
               <h2>Meeting activity</h2>
               <p>Meetings recorded during the selected period</p>
             </div>
-         
           </div>
 
           {meetingTotal === 0 ? (
             <div className="workspace-empty">
-             
               <h3>No meeting activity yet</h3>
               <p>Create meetings with dates to see your analytics here.</p>
             </div>
@@ -466,6 +659,7 @@ export default function AnalyticsPage() {
                     </span>
                     <strong>{percentage}%</strong>
                   </div>
+
                   <div className="analytics-progress-track">
                     <div
                       className={item.color}
@@ -476,8 +670,6 @@ export default function AnalyticsPage() {
               );
             })}
           </div>
-
-         
         </article>
       </div>
 
@@ -509,15 +701,18 @@ export default function AnalyticsPage() {
                     <span className="analytics-duration-dot">
                       <i className={item.color} />
                     </span>
+
                     <span className="analytics-duration-label">
                       {item.label}
                     </span>
+
                     <div className="analytics-duration-track">
                       <div
                         className={item.color}
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
+
                     <strong>{percentage}%</strong>
                   </div>
                 );
@@ -526,16 +721,18 @@ export default function AnalyticsPage() {
           )}
 
           <p className="analytics-footnote">
-            Duration statistics depend on the duration values saved for each meeting.
+            Duration statistics depend on the duration values saved for each
+            meeting.
           </p>
         </article>
 
         <article className="analytics-insight-card">
-          
           <span className="analytics-insight-eyebrow">
             WORKSPACE INSIGHT
           </span>
+
           <h2>Track progress with your own data.</h2>
+
           <p>
             Schedule meetings, update tasks, and revisit this page to review
             your recorded collaboration activity.
@@ -546,6 +743,7 @@ export default function AnalyticsPage() {
               <span>Task completion rate</span>
               <strong>{completionRate}%</strong>
             </div>
+
             <div className="analytics-mini-track">
               <span style={{ width: `${completionRate}%` }} />
             </div>
