@@ -1,10 +1,15 @@
 
+import mongoose from "mongoose";
 import {
     createTenant,
     findTenantByCode,
     findTenantById,
     findAllTenants,
 } from "../repositories/tenantRepository";
+import {
+    assignUserToTenant,
+    findUserById,
+} from "../repositories/userRepository";
 
 interface CreateTenantInput {
     name: string;
@@ -34,6 +39,10 @@ export async function createTenantService(input: CreateTenantInput) {
 }
 
 export async function getTenantByIdService(tenantId: string) {
+    if (!mongoose.isValidObjectId(tenantId)) {
+        throw new Error("INVALID_TENANT_ID");
+    }
+
     const tenant = await findTenantById(tenantId);
 
     if (!tenant) {
@@ -45,4 +54,55 @@ export async function getTenantByIdService(tenantId: string) {
 
 export async function getAllTenantsService() {
     return findAllTenants();
+}
+
+
+export async function assignUserToTenantService(
+    userId: string,
+    tenantId: string
+) {
+    if (
+        !mongoose.isValidObjectId(userId) ||
+        !mongoose.isValidObjectId(tenantId)
+    ) {
+        throw new Error("INVALID_USER_OR_TENANT_ID");
+    }
+
+    const tenant = await findTenantById(tenantId);
+
+    if (!tenant) {
+        throw new Error("TENANT_NOT_FOUND");
+    }
+
+    if (tenant.status !== "active") {
+        throw new Error("TENANT_NOT_ACTIVE");
+    }
+
+    const user = await findUserById(userId);
+
+    if (!user) {
+        throw new Error("USER_NOT_FOUND");
+    }
+
+    if (user.tenantId) {
+        throw new Error("USER_ALREADY_ASSIGNED_TO_TENANT");
+    }
+
+    const updatedUser = await assignUserToTenant(userId, tenantId);
+
+    if (!updatedUser) {
+        const currentUser = await findUserById(userId);
+
+        if (!currentUser) {
+            throw new Error("USER_NOT_FOUND");
+        }
+
+        if (currentUser.tenantId) {
+            throw new Error("USER_ALREADY_ASSIGNED_TO_TENANT");
+        }
+
+        throw new Error("USER_ASSIGNMENT_FAILED");
+    }
+
+    return updatedUser;
 }
