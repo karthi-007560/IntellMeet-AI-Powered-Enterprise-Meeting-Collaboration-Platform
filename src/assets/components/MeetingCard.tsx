@@ -1,4 +1,3 @@
-
 import "./MeetingCard.css";
 
 export type Meeting = {
@@ -18,26 +17,15 @@ type MeetingCardProps = {
   onJoin?: (meeting: Meeting) => void;
 };
 
-export default function MeetingCard({
-  meeting,
-  onJoin,
-}: MeetingCardProps) {
-  const color = meeting.color ?? "purple";
+export default function MeetingCard({ meeting, onJoin }: MeetingCardProps) {
   const status = meeting.status ?? "Upcoming";
 
   return (
     <article className="meeting-card">
       <div className="meeting-card-header">
-        <div className={`meeting-category-icon ${color}`}>
-          {meeting.category === "Design"
-            ? "✳"
-            : meeting.category === "Development"
-              ? "</>"
-              : meeting.category === "Planning"
-                ? "▤"
-                : "◉"}
+        <div className={`meeting-category-icon ${meeting.color ?? "purple"}`}>
+          ◉
         </div>
-
         <span className={`meeting-status ${status.toLowerCase().replace(" ", "-")}`}>
           {status}
         </span>
@@ -46,38 +34,21 @@ export default function MeetingCard({
       <div className="meeting-card-body">
         <span className="meeting-category">{meeting.category}</span>
         <h3>{meeting.title}</h3>
-
-        <div className="meeting-detail">
-          <span>▦</span>
-          {meeting.date}
-        </div>
-
-        <div className="meeting-detail">
-          <span>◷</span>
-          {meeting.time} · {meeting.duration}
-        </div>
+        <div className="meeting-detail">▦ {meeting.date}</div>
+        <div className="meeting-detail">◷ {meeting.time} · {meeting.duration}</div>
       </div>
 
       <div className="meeting-card-footer">
-        <div
-          className="participant-stack"
-          aria-label={`${meeting.participants.length} participants`}
-        >
-          {meeting.participants.slice(0, 4).map((participant, index) => (
+        <div className="participant-stack">
+          {(meeting.participants ?? []).slice(0, 4).map((person, index) => (
             <span
               className={`participant-avatar participant-${index % 4}`}
-              key={`${participant}-${index}`}
-              title={participant}
+              key={`${person}-${index}`}
+              title={person}
             >
-              {participant.slice(0, 1).toUpperCase()}
+              {person.charAt(0).toUpperCase()}
             </span>
           ))}
-
-          {meeting.participants.length > 4 && (
-            <span className="participant-extra">
-              +{meeting.participants.length - 4}
-            </span>
-          )}
         </div>
 
         <button

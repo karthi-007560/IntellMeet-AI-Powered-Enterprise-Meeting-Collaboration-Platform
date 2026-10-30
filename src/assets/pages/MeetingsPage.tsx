@@ -1,10 +1,9 @@
-
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   Clock3,
   Plus,
-  Search,
   Video,
   X,
   Trash2,
@@ -35,6 +34,8 @@ function saveMeetings(meetings: Meeting[]) {
 }
 
 export default function MeetingsPage() {
+  const navigate = useNavigate();
+
   const [meetings, setMeetings] = useState<Meeting[]>(loadMeetings);
   const [filter, setFilter] = useState<FilterType>("All");
   const [search, setSearch] = useState("");
@@ -48,12 +49,14 @@ export default function MeetingsPage() {
   const [participantsText, setParticipantsText] = useState("");
 
   useEffect(() => {
-    const refreshMeetings = () => setMeetings(loadMeetings());
+    const refresh = () => setMeetings(loadMeetings());
 
-    window.addEventListener("storage", refreshMeetings);
+    window.addEventListener("storage", refresh);
+    window.addEventListener("intellmeet_meetings_updated", refresh);
 
     return () => {
-      window.removeEventListener("storage", refreshMeetings);
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("intellmeet_meetings_updated", refresh);
     };
   }, []);
 
@@ -70,7 +73,6 @@ export default function MeetingsPage() {
         meeting.date,
         meeting.time,
         meeting.duration,
-        meeting.status ?? "",
         ...(meeting.participants ?? []),
       ].some((value) =>
         String(value ?? "").toLowerCase().includes(query)
@@ -100,10 +102,10 @@ export default function MeetingsPage() {
       status: "Upcoming",
     };
 
-    const updatedMeetings = [newMeeting, ...meetings];
+    const updated = [newMeeting, ...meetings];
 
-    saveMeetings(updatedMeetings);
-    setMeetings(updatedMeetings);
+    saveMeetings(updated);
+    setMeetings(updated);
 
     setTitle("");
     setDate("");
@@ -112,41 +114,40 @@ export default function MeetingsPage() {
     setCategory("Team Meeting");
     setParticipantsText("");
     setShowForm(false);
-    setFilter("All");
-    setSearch("");
   }
 
   function deleteMeeting(id: string) {
     if (!window.confirm("Delete this meeting?")) return;
 
-    const updatedMeetings = meetings.filter((meeting) => meeting.id !== id);
-
-    saveMeetings(updatedMeetings);
-    setMeetings(updatedMeetings);
+    const updated = meetings.filter((meeting) => meeting.id !== id);
+    saveMeetings(updated);
+    setMeetings(updated);
   }
 
   function updateStatus(meeting: Meeting) {
-    const currentStatus = meeting.status ?? "Upcoming";
+    const current = meeting.status ?? "Upcoming";
 
-    const nextStatus =
-      currentStatus === "Upcoming"
+    const nextStatus: Meeting["status"] =
+      current === "Upcoming"
         ? "In Progress"
-        : currentStatus === "In Progress"
+        : current === "In Progress"
           ? "Completed"
           : "Upcoming";
 
-    const updatedMeetings = meetings.map((item) =>
+    const updated = meetings.map((item) =>
       item.id === meeting.id
         ? { ...item, status: nextStatus }
         : item
     );
 
+    saveMeetings(updated);
+    setMeetings(updated);
   }
 
   function joinMeeting(meeting: Meeting) {
-    alert(
-      `"${meeting.title}" selected.\nVideo calling needs backend and WebRTC integration.`
-    );
+    if (meeting.status === "Completed") return;
+
+    navigate(`/meeting/${encodeURIComponent(meeting.id)}`);
   }
 
   const upcomingCount = meetings.filter(
@@ -179,8 +180,7 @@ export default function MeetingsPage() {
             className="meeting-primary-btn"
             onClick={() => setShowForm(true)}
           >
-            <Plus size={18} />
-            Schedule Meeting
+            <Plus size={18} /> Schedule Meeting
           </button>
         }
       />
@@ -189,51 +189,42 @@ export default function MeetingsPage() {
         <div className="meeting-summary-card">
           <span>Total Meetings</span>
           <strong>{meetings.length}</strong>
-          <small>Your saved meetings</small>
         </div>
-
         <div className="meeting-summary-card">
           <span>Upcoming</span>
           <strong>{upcomingCount}</strong>
-          <small>Ready to attend</small>
         </div>
-
         <div className="meeting-summary-card">
           <span>In Progress</span>
           <strong>{inProgressCount}</strong>
-          <small>Currently active</small>
         </div>
-
         <div className="meeting-summary-card">
           <span>Completed</span>
           <strong>{completedCount}</strong>
-          <small>Finished meetings</small>
         </div>
       </div>
 
       <div className="meetings-toolbar">
-
-          <input
+        <input
           className="meeting-search"
-            type="search"
-            placeholder="Search your meetings..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-
+          type="search"
+          placeholder="Search your meetings..."
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
 
         <div className="meeting-filters">
-          {(
-            ["All", "Upcoming", "In Progress", "Completed"] as FilterType[]
-          ).map((item) => (
-            <button
-              key={item}
-              className={filter === item ? "active" : ""}
-              onClick={() => setFilter(item)}
-            >
-              {item}
-            </button>
-          ))}
+          {(["All", "Upcoming", "In Progress", "Completed"] as FilterType[]).map(
+            (item) => (
+              <button
+                key={item}
+                className={filter === item ? "active" : ""}
+                onClick={() => setFilter(item)}
+              >
+                {item}
+              </button>
+            )
+          )}
         </div>
       </div>
 
@@ -250,25 +241,21 @@ export default function MeetingsPage() {
                 type="button"
                 className="meeting-close-btn"
                 onClick={() => setShowForm(false)}
-                aria-label="Close form"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <label htmlFor="meeting-title">Meeting title</label>
+            <label>Meeting title</label>
             <input
-              id="meeting-title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="e.g. Project planning"
-              maxLength={100}
+              placeholder="Project planning"
               required
             />
 
-            <label htmlFor="meeting-category">Meeting type</label>
+            <label>Meeting type</label>
             <select
-              id="meeting-category"
               value={category}
               onChange={(event) => setCategory(event.target.value)}
             >
@@ -280,9 +267,8 @@ export default function MeetingsPage() {
 
             <div className="meeting-form-row">
               <div>
-                <label htmlFor="meeting-date">Date</label>
+                <label>Date</label>
                 <input
-                  id="meeting-date"
                   type="date"
                   min={minDate}
                   value={date}
@@ -292,9 +278,8 @@ export default function MeetingsPage() {
               </div>
 
               <div>
-                <label htmlFor="meeting-time">Time</label>
+                <label>Time</label>
                 <input
-                  id="meeting-time"
                   type="time"
                   value={time}
                   onChange={(event) => setTime(event.target.value)}
@@ -303,9 +288,8 @@ export default function MeetingsPage() {
               </div>
             </div>
 
-            <label htmlFor="meeting-duration">Duration</label>
+            <label>Duration</label>
             <select
-              id="meeting-duration"
               value={duration}
               onChange={(event) => setDuration(event.target.value)}
             >
@@ -317,25 +301,15 @@ export default function MeetingsPage() {
               <option>120 min</option>
             </select>
 
-            <label htmlFor="meeting-participants">
-              Participants (comma-separated)
-            </label>
+            <label>Participants (comma-separated)</label>
             <input
-              id="meeting-participants"
               value={participantsText}
-              onChange={(event) =>
-                setParticipantsText(event.target.value)
-              }
-              placeholder="e.g. Karthik, Arun, Priya"
+              onChange={(event) => setParticipantsText(event.target.value)}
+              placeholder="Karthik, Arun, Priya"
             />
 
-            <p className="meeting-demo-note">
-              Your meeting will be saved in this browser.
-            </p>
-
             <button type="submit" className="meeting-submit-btn">
-              <CalendarDays size={18} />
-              Create Meeting
+              <CalendarDays size={18} /> Create Meeting
             </button>
           </form>
         </div>
@@ -350,19 +324,13 @@ export default function MeetingsPage() {
 
       {filteredMeetings.length === 0 ? (
         <div className="meetings-empty">
-          <h3>{search ? "No meetings found" : "No meetings yet"}</h3>
-          <p>
-            {search
-              ? "Try another search."
-              : "Schedule your first meeting to see it here."}
-          </p>
-
+          <h3>No meetings found</h3>
+          <p>Schedule your first meeting to see it here.</p>
           <button
             className="meeting-primary-btn"
             onClick={() => setShowForm(true)}
           >
-            <Plus size={18} />
-            Schedule Meeting
+            <Plus size={18} /> Schedule Meeting
           </button>
         </div>
       ) : (
@@ -370,66 +338,38 @@ export default function MeetingsPage() {
           {filteredMeetings.map((meeting) => (
             <article className="meeting-detail-card" key={meeting.id}>
               <div className="meeting-detail-top">
-                <div
-                  className={`meeting-video-icon ${meeting.color ?? "purple"}`}
-                >
+                <div className={`meeting-video-icon ${meeting.color ?? "purple"}`}>
                   <Video size={22} />
                 </div>
 
-                <span
-                  className={`meeting-status ${(
-                    meeting.status ?? "Upcoming"
-                  )
-                    .toLowerCase()
-                    .replace(" ", "-")}`}
-                >
+                <span className={`meeting-status ${(meeting.status ?? "Upcoming").toLowerCase().replace(" ", "-")}`}>
                   {meeting.status ?? "Upcoming"}
                 </span>
               </div>
 
-              <span className="meeting-category-label">
-                {meeting.category}
-              </span>
-
+              <span className="meeting-category-label">{meeting.category}</span>
               <h3>{meeting.title}</h3>
 
               <div className="meeting-detail-info">
-                <span>
-                  <CalendarDays size={16} />
-                  {meeting.date}
-                </span>
-
-                <span>
-                  <Clock3 size={16} />
-                  {meeting.time} · {meeting.duration}
-                </span>
+                <span><CalendarDays size={16} /> {meeting.date}</span>
+                <span><Clock3 size={16} /> {meeting.time} · {meeting.duration}</span>
               </div>
 
               <div className="meeting-detail-footer">
                 <div className="meeting-participants">
-                  {(meeting.participants ?? []).slice(0, 4).map(
-                    (person, index) => (
-                      <span
-                        className={`meeting-avatar avatar-${index % 4}`}
-                        key={`${meeting.id}-${person}-${index}`}
-                        title={person}
-                      >
-                        {person.charAt(0).toUpperCase()}
-                      </span>
-                    )
-                  )}
-
-                  <small>
-                    {(meeting.participants ?? []).length} participant(s)
-                  </small>
+                  {(meeting.participants ?? []).slice(0, 4).map((person, index) => (
+                    <span
+                      className={`meeting-avatar avatar-${index % 4}`}
+                      key={`${meeting.id}-${person}-${index}`}
+                    >
+                      {person.charAt(0).toUpperCase()}
+                    </span>
+                  ))}
+                  <small>{(meeting.participants ?? []).length} participant(s)</small>
                 </div>
 
                 <div className="meeting-actions">
-                  <button
-                    className="meeting-join-btn"
-                    onClick={() => updateStatus(meeting)}
-                    title="Change meeting status"
-                  >
+                  <button className="meeting-join-btn" onClick={() => updateStatus(meeting)}>
                     Update Status
                   </button>
 
@@ -444,8 +384,7 @@ export default function MeetingsPage() {
                   <button
                     className="meeting-join-btn"
                     onClick={() => deleteMeeting(meeting.id)}
-                    aria-label={`Delete ${meeting.title}`}
-                    title="Delete meeting"
+                    aria-label="Delete meeting"
                   >
                     <Trash2 size={16} />
                   </button>

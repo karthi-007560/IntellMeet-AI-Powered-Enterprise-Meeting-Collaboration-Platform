@@ -1,6 +1,8 @@
+
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import AppLayout from "../src/assets/components/AppLayout";
+
 import DashboardPage from "../src/assets/pages/DashboardPage";
 import WorkspacePage from "../src/assets/pages/WorkspacePage";
 import AnalyticsPage from "./assets/pages/AnalyticsPage";
@@ -11,6 +13,9 @@ import TasksPage from "../src/assets/pages/TasksPage";
 import MeetingHistoryPage from "../src/assets/pages/MeetingHistoryPage";
 import TeamPage from "./assets/pages/TeamPage";
 
+// Meeting Room
+import MeetingRoomPage from "../src/assets/components/MeetingRoom/MeetingRoom";
+
 function App() {
   return (
     <AppLayout>
@@ -18,6 +23,12 @@ function App() {
         <Route path="/" element={<DashboardPage />} />
 
         <Route path="/meetings" element={<MeetingsPage />} />
+
+        {/* Live Meeting Room */}
+        <Route
+          path="/meeting/:meetingId"
+          element={<MeetingRoomPage />}
+        />
 
         <Route path="/tasks" element={<TasksPage />} />
 

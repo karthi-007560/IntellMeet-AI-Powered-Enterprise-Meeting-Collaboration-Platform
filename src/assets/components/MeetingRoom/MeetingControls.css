@@ -1,0 +1,29 @@
+
+.mr-controls {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  background: #151d32;
+  flex-wrap: wrap;
+}
+
+.mr-controls button {
+  padding: 12px 17px;
+  border: 1px solid #46516b;
+  border-radius: 10px;
+  color: white;
+  background: #27334c;
+  cursor: pointer;
+}
+
+.mr-controls button:hover {
+  background: #394966;
+}
+
+.mr-controls .mr-end-call {
+  background: #dc3545;
+  border-color: #dc3545;
+}

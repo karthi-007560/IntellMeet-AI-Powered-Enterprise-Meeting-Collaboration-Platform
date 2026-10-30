@@ -1,0 +1,29 @@
+
+.mr-participants {
+  padding: 16px;
+  color: white;
+  background: #151d32;
+  border-radius: 12px;
+}
+
+.mr-participants h3 {
+  margin-top: 0;
+}
+
+.mr-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #29344d;
+}
+
+.mr-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #5364d9;
+  font-weight: bold;
+}
